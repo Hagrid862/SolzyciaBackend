@@ -14,4 +14,5 @@ public class MainDbContext: DbContext
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Reservation> Reservations { get; set; }
+    public DbSet<Admin> Admins { get; set; }
 }
