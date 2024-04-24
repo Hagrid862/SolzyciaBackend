@@ -29,8 +29,6 @@ public class AdminService : IAdminService
 
             var sentStatus = Helpers.Mail.Sent2FA(admin.Email, code);
             
-            Console.WriteLine(sentStatus);
-            
             if (sentStatus != "SUCCESS")
                 return "ERROR";
 
@@ -46,7 +44,6 @@ public class AdminService : IAdminService
             return "SUCCESS";
         } catch (Exception e)
         {
-            Console.WriteLine(e.Message);
             return "ERROR";
         }
     }

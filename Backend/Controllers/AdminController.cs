@@ -22,8 +22,6 @@ public class AdminController : ControllerBase
     {
         string status = await _adminService.Login(model.Username, model.Password);
         
-        Console.WriteLine(status);
-        
         if (status == "SUCCESS")
         {
             return Ok(JsonSerializer.Serialize(new {message = "2FA Sent to mail"}));
