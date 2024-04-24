@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "ha31bykOx25MKmE3zZOIP6fPIGdtGAzWU6GbbMBNJEtEeVZMLiB0cJ9xNjXb006ANlpeP3Ih5RhjfVHz/puHxg==",
+  "dgSpecHash": "34K1aHlK1frdjiXzjVQg1MOYKA7a15ZEKi02KNddKAW+gkCgICh2NP3bGpDS6vjW/paHd8Ej8LUGM7hPilPJ1w==",
   "success": true,
   "projectFilePath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/Backend.csproj",
   "expectedPackageFiles": [
@@ -28,6 +28,10 @@
     "/Users/hagrid/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.0/microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
     "/Users/hagrid/.nuget/packages/microsoft.extensions.options/8.0.0/microsoft.extensions.options.8.0.0.nupkg.sha512",
     "/Users/hagrid/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512",
+    "/Users/hagrid/.nuget/packages/microsoft.identitymodel.abstractions/7.5.1/microsoft.identitymodel.abstractions.7.5.1.nupkg.sha512",
+    "/Users/hagrid/.nuget/packages/microsoft.identitymodel.jsonwebtokens/7.5.1/microsoft.identitymodel.jsonwebtokens.7.5.1.nupkg.sha512",
+    "/Users/hagrid/.nuget/packages/microsoft.identitymodel.logging/7.5.1/microsoft.identitymodel.logging.7.5.1.nupkg.sha512",
+    "/Users/hagrid/.nuget/packages/microsoft.identitymodel.tokens/7.5.1/microsoft.identitymodel.tokens.7.5.1.nupkg.sha512",
     "/Users/hagrid/.nuget/packages/microsoft.openapi/1.4.3/microsoft.openapi.1.4.3.nupkg.sha512",
     "/Users/hagrid/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
     "/Users/hagrid/.nuget/packages/npgsql/8.0.2/npgsql.8.0.2.nupkg.sha512",
