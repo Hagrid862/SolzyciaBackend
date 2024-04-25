@@ -37,6 +37,7 @@ public class AdminService : IAdminService
                 Id = Helpers.Snowflake.GenerateId(),
                 Code = code,
                 Admin = admin,
+                IsUsed = false,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -72,6 +73,9 @@ public class AdminService : IAdminService
 
             if (twoFactorRequest.Code != code)
                 return "INVALID";
+            
+            if (twoFactorRequest.IsUsed)
+                return "INVALID";
 
             if (DateTime.UtcNow - twoFactorRequest.CreatedAt > TimeSpan.FromMinutes(15))
                 return "EXPIRED";
@@ -80,8 +84,11 @@ public class AdminService : IAdminService
             
             if (token == "NOTINITIALIZED")
                 return "INTERNALERROR";
-            else
-                return token;
+            
+            twoFactorRequest.IsUsed = true;
+            _context.TwoFactorAuths.Update(twoFactorRequest);
+            await _context.SaveChangesAsync();
+            return token;
         } catch (Exception e)
         {
             Console.WriteLine(e.Message);

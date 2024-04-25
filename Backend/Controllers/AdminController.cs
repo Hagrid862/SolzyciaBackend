@@ -58,6 +58,5 @@ public class AdminController : ControllerBase
         {
             return Ok(JsonSerializer.Serialize(new { message = "Successfully logged in", token = response }));
         }
-        
     }
 }
