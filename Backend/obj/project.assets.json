@@ -2865,19 +2865,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/hagrid/.nuget/packages/": {}
+    "/Users/gruby/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/Backend.csproj",
+      "projectUniqueName": "/Users/gruby/Developer/Git/solzycia/backend/Backend/Backend.csproj",
       "projectName": "Backend",
-      "projectPath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/Backend.csproj",
-      "packagesPath": "/Users/hagrid/.nuget/packages/",
-      "outputPath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/obj/",
+      "projectPath": "/Users/gruby/Developer/Git/solzycia/backend/Backend/Backend.csproj",
+      "packagesPath": "/Users/gruby/.nuget/packages/",
+      "outputPath": "/Users/gruby/Developer/Git/solzycia/backend/Backend/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/hagrid/.nuget/NuGet/NuGet.Config"
+        "/Users/gruby/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -2943,7 +2943,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.101/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/Users/gruby/.dotnet/sdk/8.0.203/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
