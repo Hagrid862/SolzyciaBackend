@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Helpers;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,7 @@ public class AdminService : IAdminService
         _context = context;
     }
     
-    public async Task<string> Login(string userName, string password)
+    public async Task<string> Login(string userName, string password, bool remember)
     {
         try
         {
@@ -38,7 +39,8 @@ public class AdminService : IAdminService
                 Code = code,
                 Admin = admin,
                 IsUsed = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Remember = remember
             };
 
             await _context.TwoFactorAuths.AddAsync(twoFactorRequest);
@@ -50,18 +52,18 @@ public class AdminService : IAdminService
         }
     }
     
-    public async Task<string> Verify(string username, string password, string code)
+    public async Task<(string access, string? refresh)> Verify(string username, string password, string code)
     {
         try
         {
             //get latest code for username
             var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Name == username);
             if (admin == null)
-                return "NOTFOUND";
+                return ( "NOTFOUND", null);
 
             var passwordHash = Helpers.Hasher.GetHash(password, admin.PasswordSalt);
             if (passwordHash != admin.PasswordHash)
-                return "INVALID";
+                return ("INVALID", null);
 
             var twoFactorRequest = await _context.TwoFactorAuths
                 .Where(t => t.Admin == admin)
@@ -69,36 +71,50 @@ public class AdminService : IAdminService
                 .FirstOrDefaultAsync();
             
             if (twoFactorRequest == null)
-                return "NOTFOUND";
+                return ("NOTFOUND", null);
 
             if (twoFactorRequest.Code != code)
-                return "INVALID";
+                return ("INVALID", null);
             
             if (twoFactorRequest.IsUsed)
-                return "INVALID";
+                return ("INVALID", null);
 
             if (DateTime.UtcNow - twoFactorRequest.CreatedAt > TimeSpan.FromMinutes(15))
-                return "EXPIRED";
+                return ("EXPIRED", null);
 
-            var token = Helpers.JWT.GenerateAdminToken(admin);
-            
-            if (token == "NOTINITIALIZED")
-                return "INTERNALERROR";
-            
-            twoFactorRequest.IsUsed = true;
-            _context.TwoFactorAuths.Update(twoFactorRequest);
-            await _context.SaveChangesAsync();
-            return token;
+
+            if (twoFactorRequest.Remember)
+            {
+                var (refresh, access) = JWT.GenerateLoginTermAdminToken(admin);
+                if (refresh == "NOTINITIALIZED" || access == "NOTINITIALIZED" || refresh == "ERROR" || access == "ERROR")
+                    return ("INTERNALERROR", null);
+                
+                twoFactorRequest.IsUsed = true;
+                _context.TwoFactorAuths.Update(twoFactorRequest);
+                await _context.SaveChangesAsync();
+                return (access, refresh);
+            }
+            else
+            {
+                var token = JWT.GenerateAdminToken(admin);
+                if (token == "NOTINITIALIZED" || token == "ERROR")
+                    return ("INTERNALERROR", "");
+                
+                twoFactorRequest.IsUsed = true;
+                _context.TwoFactorAuths.Update(twoFactorRequest);
+                await _context.SaveChangesAsync();
+                return (token, null);
+            }
         } catch (Exception e)
         {
             Console.WriteLine(e.Message);
-            return "INTERNALERROR";
+            return ("INTERNALERROR", "");
         }
     }
 }
 
 public interface IAdminService
 {
-    Task<string> Login(string userName, string password);
-    Task<string> Verify(string username, string password, string code);
+    Task<string> Login(string userName, string password, bool remember);
+    Task<(string access, string refresh)> Verify(string username, string password, string code);
 }
