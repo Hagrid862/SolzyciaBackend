@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using Backend.Data;
 using Backend.Models;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -8,11 +9,13 @@ namespace Backend.Helpers;
 
 public static class JWT
 {
+    private static MainDbContext context;
     private static string secret;
 
-    public static void Init(IConfiguration configuration)
+    public static void Init(IConfiguration configuration, MainDbContext _context)
     {
         secret = configuration["AppSettings:JWT:Secret"];
+        context = _context;
     }
     
     public static string GenerateAdminToken(Admin admin)
@@ -90,16 +93,48 @@ public static class JWT
             return (refresh.ToString(), access.ToString());
     }
     
-    public static bool IsValid(string token)
+    public static (bool correct, bool valid) IsValid(string token)
     {
         if (secret == null)
-            return false;
+            return (false, false);
+
+        var data = Encoding.UTF8.GetBytes(secret);
+        var securityKey = new SymmetricSecurityKey(data);
+
+        var handler = new JsonWebTokenHandler();
+        try
+        {
+            var result = handler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = securityKey,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true
+            });
+
+            return (true, true);
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            return (true, false);
+        }
+        catch (Exception)
+        {
+            return (false, false);
+        }
+    }
+
+    public static (string access, string? refresh) RefreshToken(string refreshToken)
+    {
+        if (secret == null)
+            return ("NOTINITIALIZED", null);
         
         var data = Encoding.UTF8.GetBytes(secret);
         var securityKey = new SymmetricSecurityKey(data);
         
         var handler = new JsonWebTokenHandler();
-        var result = handler.ValidateToken(token, new TokenValidationParameters
+        var result = handler.ValidateToken(refreshToken, new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = securityKey,
@@ -108,6 +143,30 @@ public static class JWT
             ValidateLifetime = true
         });
         
-        return result.IsValid;
+        if (!result.IsValid)
+            return ("INVALID", null);
+        
+        var claims = result.Claims;
+        
+        if (claims == null)
+            return ("INVALID", null);
+        
+        var tokenTypeClaim = claims.FirstOrDefault(c => c.Key == "Type");
+        if (tokenTypeClaim.Value.ToString() != "Refresh")
+            return ("INVALID", null);
+        
+        var idClaim = claims.FirstOrDefault(c => c.Key == "Id");
+        if (idClaim.Value == null)
+            return ("INVALID", null);
+        
+        var admin = context.Admins.FirstOrDefault(a => a.Id == long.Parse(idClaim.Value.ToString()));
+        if (admin == null)
+            return ("INVALID", null);
+        
+        var (refresh, access) = GenerateLoginTermAdminToken(admin);
+        if (refresh == "NOTINITIALIZED" || access == "NOTINITIALIZED" || refresh == "ERROR" || access == "ERROR")
+            return ("INTERNALERROR", null);
+        
+        return (access, refresh);
     }
 }

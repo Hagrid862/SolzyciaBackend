@@ -1,3 +1,4 @@
+using Backend.Data;
 using Backend.Services;
 
 namespace Backend.Helpers;
@@ -6,7 +7,8 @@ public static class Services
 {
     public static void Initialize(WebApplicationBuilder builder)
     {
-        JWT.Init(builder.Configuration);
+        //jwt is config and database context
+        JWT.Init(builder.Configuration, builder.Services.BuildServiceProvider().GetService<MainDbContext>());
         Mail.Init(builder.Configuration);
         
         builder.Services.AddScoped<IAdminService, AdminService>();

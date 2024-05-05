@@ -14,7 +14,7 @@ public class AdminService : IAdminService
         _context = context;
     }
     
-    public async Task<string> Login(string userName, string password, bool remember)
+    public async Task<string> Login(string userName, string password, bool remember, string clientIp)
     {
         try
         {
@@ -37,6 +37,7 @@ public class AdminService : IAdminService
             {
                 Id = Helpers.Snowflake.GenerateId(),
                 Code = code,
+                IP = clientIp,
                 Admin = admin,
                 IsUsed = false,
                 CreatedAt = DateTime.UtcNow,
@@ -52,36 +53,23 @@ public class AdminService : IAdminService
         }
     }
     
-    public async Task<(string access, string? refresh)> Verify(string username, string password, string code)
+    public async Task<(string access, string? refresh)> VerifyOtp(string code, string clientIp)
     {
         try
         {
             //get latest code for username
-            var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Name == username);
-            if (admin == null)
-                return ( "NOTFOUND", null);
-
-            var passwordHash = Helpers.Hasher.GetHash(password, admin.PasswordSalt);
-            if (passwordHash != admin.PasswordHash)
-                return ("INVALID", null);
-
-            var twoFactorRequest = await _context.TwoFactorAuths
-                .Where(t => t.Admin == admin)
-                .OrderByDescending(t => t.CreatedAt)
-                .FirstOrDefaultAsync();
+            var twoFactorRequest = await _context.TwoFactorAuths.Include(twoFactorAuth => twoFactorAuth.Admin).FirstOrDefaultAsync(r => r.IP == clientIp && r.Code == code);
             
             if (twoFactorRequest == null)
                 return ("NOTFOUND", null);
 
-            if (twoFactorRequest.Code != code)
-                return ("INVALID", null);
-            
             if (twoFactorRequest.IsUsed)
                 return ("INVALID", null);
 
             if (DateTime.UtcNow - twoFactorRequest.CreatedAt > TimeSpan.FromMinutes(15))
                 return ("EXPIRED", null);
 
+            var admin = twoFactorRequest.Admin;
 
             if (twoFactorRequest.Remember)
             {
@@ -111,10 +99,42 @@ public class AdminService : IAdminService
             return ("INTERNALERROR", "");
         }
     }
+    
+    public async Task<(bool exists, bool valid)> VerifyToken(string token)
+    {
+        try
+        {
+            return JWT.IsValid(token);
+        }
+        catch (Exception e)
+        {
+            return (false, false);
+        }
+    }
+    
+    public async Task<(string access, string refresh)> RefreshToken(string refreshToken)
+    {
+        try
+        {
+            var (access, refresh) = JWT.RefreshToken(refreshToken);
+
+            if (access == "NOTINITIALIZED" || refresh == "NOTINITIALIZED" || access == "ERROR" || refresh == "ERROR")
+                return ("INTERNALERROR", "");
+
+            return (access, refresh);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return ("INTERNALERROR", "");
+        }
+    }
 }
 
 public interface IAdminService
 {
-    Task<string> Login(string userName, string password, bool remember);
-    Task<(string access, string refresh)> Verify(string username, string password, string code);
+    Task<string> Login(string userName, string password, bool remember, string clientIp);
+    Task<(string access, string? refresh)> VerifyOtp(string code, string clientIp);
+    Task<(bool exists, bool valid)> VerifyToken(string token);
+    Task<(string access, string refresh)> RefreshToken(string refresh);
 }
