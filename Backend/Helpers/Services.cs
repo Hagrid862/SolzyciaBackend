@@ -12,5 +12,6 @@ public static class Services
         Mail.Init(builder.Configuration);
         
         builder.Services.AddScoped<IAdminService, AdminService>();
+        builder.Services.AddScoped<ICategoryService, CategoryService>();
     } 
 }
