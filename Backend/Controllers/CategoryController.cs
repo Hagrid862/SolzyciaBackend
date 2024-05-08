@@ -39,13 +39,32 @@ public class CategoryController: ControllerBase
             return BadRequest(new { message = "Something went wrong" });
         }
     }
+    
+    [HttpPut]
+    [AuthenticateAdminTokenMiddleware]
+    public async Task<IActionResult> UpdateCategory([FromBody] UpdateCategoryModel model)
+    {
+        var result = await _categoryService.UpdateCategory(model);
+        Console.WriteLine(result);
+        if (result == "SUCCESS")
+        {
+            return Ok(new { message = "Category updated successfully" });
+        }
+        else if (result == "NOTFOUND")
+        {
+            return NotFound(new { message = "Category not found" });
+        }
+        else
+        {
+            return BadRequest(new { message = "Something went wrong" });
+        }
+    }
 
     [HttpDelete("{id}")]
     [AuthenticateAdminTokenMiddleware]
     public async Task<IActionResult> DeleteCategory(long id)
     {
         var result = await _categoryService.DeleteCategory(id);
-        Console.WriteLine(result + " from controller, " + id);
         if (result == "SUCCESS")
         {
             return Ok(new { message = "Category deleted successfully" });

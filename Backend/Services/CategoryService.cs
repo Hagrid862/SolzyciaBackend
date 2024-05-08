@@ -2,6 +2,7 @@ using Backend.Data;
 using Backend.Dto;
 using Backend.Models;
 using Backend.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services;
@@ -49,6 +50,25 @@ public class CategoryService: ICategoryService
         }
     }
     
+    public async Task<string> UpdateCategory(UpdateCategoryModel model)
+    {
+        try
+        {
+            var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.Id));
+            if (category == null)
+                return "NOTFOUND";
+            
+            category.Name = model.Name;
+            category.Description = model.Description;
+            category.Icon = model.Icon;
+            await _context.SaveChangesAsync();
+            return "SUCCESS";
+        } catch (Exception e)
+        {
+            return "ERROR";
+        }
+    }
+    
     public async Task<string> DeleteCategory(long id)
     {
         try
@@ -73,5 +93,6 @@ public interface ICategoryService
 {
     Task<List<CategoryDto>> GetCategories();
     Task<string> AddCategory(AddCategoryModel category);
+    Task<string> UpdateCategory(UpdateCategoryModel category);
     Task<string> DeleteCategory(long id);
 }
