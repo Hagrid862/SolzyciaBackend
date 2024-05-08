@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Dto;
 using Backend.Models;
 using Backend.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -14,9 +15,17 @@ public class CategoryService: ICategoryService
         _context = context;
     }
     
-    public async Task<List<Category>> GetCategories()
+    public async Task<List<CategoryDto>> GetCategories()
     {
-        return await _context.Categories.ToListAsync();
+        var categories = await _context.Categories.ToListAsync();
+        return categories.Select(c => new CategoryDto
+        {
+            Id = c.Id.ToString(),
+            Name = c.Name,
+            Icon = c.Icon,
+            Description = c.Description,
+            CreatedAt = c.CreatedAt
+        }).ToList();
     }
     
     public async Task<string> AddCategory(AddCategoryModel model)
@@ -39,10 +48,30 @@ public class CategoryService: ICategoryService
             return "ERROR";
         }
     }
+    
+    public async Task<string> DeleteCategory(long id)
+    {
+        try
+        {
+            var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
+            if (category == null)
+                return "NOTFOUND";
+            
+            Console.WriteLine(category.Name);
+            
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+            return "SUCCESS";
+        } catch (Exception e)
+        {
+            return "ERROR";
+        }
+    }
 }
 
 public interface ICategoryService
 {
-    Task<List<Category>> GetCategories();
+    Task<List<CategoryDto>> GetCategories();
     Task<string> AddCategory(AddCategoryModel category);
+    Task<string> DeleteCategory(long id);
 }
