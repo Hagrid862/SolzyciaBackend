@@ -13,5 +13,6 @@ public static class Services
         
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
+        builder.Services.AddScoped<IProductService, ProductService>();
     } 
 }

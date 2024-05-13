@@ -28,6 +28,7 @@ public static class JWT
 
         var claims = new Dictionary<String, object>()
         {
+            ["type"] = "access",
             ["Id"] = admin.Id,
         };
         
@@ -46,8 +47,69 @@ public static class JWT
         else
             return token.ToString();
     }
+
+    public static string GenerateServiceToken(string accessToken)
+    {
+        if (secret == null)
+            return "NOTINITIALIZED";
+        
+        var data = Encoding.UTF8.GetBytes(secret);
+        var securityKey = new SymmetricSecurityKey(data);
+
+        var handler = new JsonWebTokenHandler();
+        handler.SetDefaultTimesOnTokenCreation = false;
+        
+        var result = handler.ValidateToken(accessToken, new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = securityKey,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true
+        });
+        
+        if (!result.IsValid)
+            return "INVALID";
+        
+        var accessClaims = result.Claims;
+        
+        if (accessClaims == null)
+            return "INVALID";
+        
+        var tokenTypeClaim = accessClaims.FirstOrDefault(c => c.Key == "Type");
+        if (tokenTypeClaim.Value.ToString() != "Access")
+            return "INVALID";
+        
+        var idClaim = accessClaims.FirstOrDefault(c => c.Key == "Id");
+        if (idClaim.Value == null)
+            return "INVALID";
+        
+        var admin = context.Admins.FirstOrDefault(a => a.Id == long.Parse(idClaim.Value.ToString()));
+        
+        if (admin == null)
+            return "INVALID";
+        
+        var claims = new Dictionary<String, object>()
+        {
+            ["type"] = "service",
+            ["AccessToken"] = accessToken,
+        };
+        
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims.Select(claim => new Claim(claim.Key, claim.Value.ToString()))),
+            Expires = DateTime.UtcNow.AddMinutes(3),
+            SigningCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature)
+        };
+        
+        var token = handler.CreateToken(descriptor);
+        if (token == null)
+            return "ERROR";
+        else
+            return token.ToString();
+    }
     
-    public static (string refresh, string access) GenerateLoginTermAdminToken(Admin admin)
+    public static (string refresh, string access) GenerateLongTermAdminToken(Admin admin)
     {
         if (secret == null)
             return ("NOTINITIALIZED", "NOTINITIALIZED");
@@ -163,10 +225,67 @@ public static class JWT
         if (admin == null)
             return ("INVALID", null);
         
-        var (refresh, access) = GenerateLoginTermAdminToken(admin);
+        var (refresh, access) = GenerateLongTermAdminToken(admin);
         if (refresh == "NOTINITIALIZED" || access == "NOTINITIALIZED" || refresh == "ERROR" || access == "ERROR")
             return ("INTERNALERROR", null);
         
         return (access, refresh);
     }
+    
+    public static long GetId(string token)
+    {
+        if (secret == null)
+            return -1;
+        
+        var data = Encoding.UTF8.GetBytes(secret);
+        var securityKey = new SymmetricSecurityKey(data);
+
+        var handler = new JsonWebTokenHandler();
+        var result = handler.ValidateToken(token, new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = securityKey,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true
+        });
+        
+        if (!result.IsValid)
+            return -1;
+        
+        var claims = result.Claims;
+        
+        if (claims == null)
+            return -1;
+        
+        var idClaim = claims.FirstOrDefault(c => c.Key == "Id");
+        if (idClaim.Value == null)
+            return -1;
+        
+        return long.Parse(idClaim.Value.ToString());
+    }
+    
+    public static IDictionary<string, object> GetClaims(string token)
+    {
+        if (secret == null)
+            return null;
+        
+        var data = Encoding.UTF8.GetBytes(secret);
+        var securityKey = new SymmetricSecurityKey(data);
+
+        var handler = new JsonWebTokenHandler();
+        var result = handler.ValidateToken(token, new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = securityKey,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true
+        });
+        
+        if (!result.IsValid)
+            return null;
+        
+        return result.Claims;
+    } 
 }

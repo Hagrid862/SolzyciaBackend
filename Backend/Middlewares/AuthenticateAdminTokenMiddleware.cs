@@ -21,6 +21,7 @@ public class AuthenticateAdminTokenMiddleware : Attribute, IAsyncActionFilter
                 var (exists, valid) = JWT.IsValid(token);
                 if (exists && valid)
                 {
+                    context.HttpContext.Items["userId"] = JWT.GetId(token);
                     await next();
                 }
                 else

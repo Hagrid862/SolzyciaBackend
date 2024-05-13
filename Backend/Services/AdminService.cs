@@ -57,7 +57,6 @@ public class AdminService : IAdminService
     {
         try
         {
-            //get latest code for username
             var twoFactorRequest = await _context.TwoFactorAuths.Include(twoFactorAuth => twoFactorAuth.Admin).FirstOrDefaultAsync(r => r.IP == clientIp && r.Code == code);
             
             if (twoFactorRequest == null)
@@ -73,7 +72,7 @@ public class AdminService : IAdminService
 
             if (twoFactorRequest.Remember)
             {
-                var (refresh, access) = JWT.GenerateLoginTermAdminToken(admin);
+                var (refresh, access) = JWT.GenerateLongTermAdminToken(admin);
                 if (refresh == "NOTINITIALIZED" || access == "NOTINITIALIZED" || refresh == "ERROR" || access == "ERROR")
                     return ("INTERNALERROR", null);
                 
@@ -95,7 +94,6 @@ public class AdminService : IAdminService
             }
         } catch (Exception e)
         {
-            Console.WriteLine(e.Message);
             return ("INTERNALERROR", "");
         }
     }
@@ -125,7 +123,6 @@ public class AdminService : IAdminService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
             return ("INTERNALERROR", "");
         }
     }
