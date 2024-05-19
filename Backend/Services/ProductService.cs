@@ -21,8 +21,6 @@ namespace Backend.Services;
     {
         try
         {
-            Console.WriteLine("id: " + userId);
-
             if (userId == null)
                 return "ERROR";
             
@@ -119,7 +117,7 @@ namespace Backend.Services;
         } catch (Exception e)
         {
             Console.WriteLine(e);
-            return "ERROR123";
+            return "ERROR";
         }
     }
     

@@ -16,4 +16,6 @@ public class MainDbContext: DbContext
     public DbSet<Reservation> Reservations { get; set; }
     public DbSet<Admin> Admins { get; set; }
     public DbSet<TwoFactorAuth> TwoFactorAuths { get; set; }
+    public DbSet<Event> Events { get; set; }
+    public DbSet<EventDate> EventDates { get; set; }
 }
