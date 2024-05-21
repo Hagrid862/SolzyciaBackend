@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using Backend.Data;
+using Backend.Dto;
 using Backend.Helpers;
 using Backend.Models;
 using Backend.ViewModels;
@@ -10,6 +11,115 @@ namespace Backend.Services;
 
 public class EventService: IEventService
 {
+    public async Task<List<EventDto>?> GetEvents(bool reviews, string orderBy, string order, int page, int limit)
+    {
+        try
+        {
+            var events = await _context.Events
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .Include(x => x.Dates)
+                .Skip((page - 1) * limit)
+                .Take(limit)
+                .ToListAsync();
+
+            foreach (var ev in events)
+            {
+                Console.WriteLine(ev.Dates.Count + " " + ev.Dates[0].Date);
+            }
+
+            if (events.Count == 0)
+            {
+                return null;
+            }
+
+            List<EventDto> eventsDto = new();
+
+            foreach (var @event in events)
+            {
+                Category? category = @event.Category;
+                EventDate[] dates = @event.Dates.ToArray();
+                List<Tag> tags = @event.Tags ?? new();
+                List<Review> reviewsList = @event.Reviews ?? new();
+
+                Console.WriteLine(1);
+
+                CategoryDto? categoryDto = null;
+
+                Console.WriteLine(2);
+
+                if (category != null)
+                {
+                    categoryDto = new CategoryDto
+                    {
+                        Id = category.Id.ToString(),
+                        Name = category.Name,
+                        Icon = category.Icon,
+                        Description = category.Description,
+                        CreatedAt = category.CreatedAt
+                    };
+                }
+
+                Console.WriteLine(3);
+
+                List<EventDateDto> datesDto = new List<EventDateDto>();
+
+                foreach (var date in dates)
+                {
+                    var dateDto = new EventDateDto
+                    {
+                        Id = date.Id.ToString(),
+                        Date = date.Date,
+                        Seats = date.Seats
+                    };
+                    datesDto.Add(dateDto);
+                }
+
+                Console.WriteLine(4);
+
+                List<TagDto>? tagsDto = null;
+
+                foreach (var tag in tags)
+                {
+                    var tagDto = new TagDto
+                    {
+                        Id = tag.Id.ToString(),
+                        Name = tag.Name,
+                        Description = tag.Description,
+                        CreatedAt = tag.CreatedAt
+                    };
+                    tagsDto.Add(tagDto);
+                }
+
+                Console.WriteLine(5);
+
+                var eventDto = new EventDto
+                {
+                    Id = @event.Id.ToString(),
+                    Name = @event.Name,
+                    Description = @event.Description,
+                    Time = @event.Time,
+                    Price = @event.Price,
+                    Images = @event.Images,
+                    Category = categoryDto ?? null,
+                    Tags = eventsDto.ToList(),
+                    Dates = datesDto ?? null,
+                    CreatedAt = @event.CreatedAt
+                };
+                eventsDto.Add(eventDto);
+
+                Console.WriteLine(6);
+            }
+            return eventsDto;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+        
+    }
+    
     private readonly MainDbContext _context;
     
     public EventService(MainDbContext context)
@@ -145,9 +255,12 @@ public class EventService: IEventService
             return e.Message;
         }
     }
+    
+    
 }
 
 public interface IEventService
 {
+    Task<List<EventDto>?> GetEvents(bool reviews, string orderBy, string order, int page, int limit);
     Task<string> AddEvent(AddEventModel model, long? userId);
 }

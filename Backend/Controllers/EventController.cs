@@ -1,3 +1,4 @@
+using Backend.Dto;
 using Backend.Middlewares;
 using Backend.Services;
 using Backend.ViewModels;
@@ -46,6 +47,32 @@ public class EventController: ControllerBase
             {
                 return StatusCode(500, new {message = result});
             }
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetEvents([FromQuery] bool reviews = false, [FromQuery] string orderBy = "created_at", [FromQuery] string order = "desc", [FromQuery] int page = 1, [FromQuery] int limit = 25)
+    {
+        if (orderBy is not ("created_at" or "price" or "name" or "rating" or "popularity"))
+        {
+            return BadRequest(new { message = "Invalid orderBy parameter" });
+        } else if (order is not ("desc" or "asc"))
+        {
+            return BadRequest(new { message = "Invalid order parameter" });
+        } else if (page < 1)
+        {
+            return BadRequest(new { message = "Invalid page parameter" });
+        } else if (limit < 1)
+        {
+            return BadRequest(new { message = "Invalid limit parameter" });
+        } else
+        {
+            List<EventDto> events = await _eventService.GetEvents(reviews, orderBy, order, page, limit);
+            if (events == null)
+            {
+                return NotFound(new { message = "No events found" });
+            }
+            return Ok(new {events = events});
         }
     }
 }
