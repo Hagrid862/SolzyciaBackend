@@ -8,14 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services;
 
-    public class ProductService: IProductService
+public class ProductService: IProductService
+{
+    private readonly MainDbContext _context;
+    
+    public ProductService(MainDbContext context)
     {
-        private readonly MainDbContext _context;
-        
-        public ProductService(MainDbContext context)
-        {
-            _context = context;
-        }
+        _context = context;
+    }
         
     public async Task<string> AddProduct(AddProductModel model, long? userId)
     {
@@ -25,6 +25,8 @@ namespace Backend.Services;
                 return "ERROR";
             
             Category? category = null;
+            
+            Console.WriteLine("Category ID: " + model.CategoryId);
 
             if (model.CategoryId != null) {
                 category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.CategoryId));
@@ -200,10 +202,92 @@ namespace Backend.Services;
             return null;
         }
     }
+    
+    public async Task<List<ProductDto>?> GetProductsByCategory(string category, bool reviews, string orderBy, string order, int page, int limit)
+    {
+        try
+        {
+            var categoryId = long.Parse(category);
+            var products = await _context.Products.Include(p => p.Category).Include(p => p.Tags).Where(p => p.Category.Id == categoryId).ToListAsync();
+            var productsDto = new List<ProductDto>();
+            
+            foreach (var product in products)
+            {
+                var productDto = new ProductDto
+                {
+                    Id = product.Id.ToString(),
+                    Name = product.Name,
+                    Title = product.Title,
+                    Description = product.Description,
+                    Price = product.Price,
+                    Images = product.Images,
+                    CreatedAt = product.CreatedAt,
+                    Category = null,
+                    Tags = null,
+                };
+                
+                if (product.Category != null)
+                {
+                    productDto.Category = new CategoryDto
+                    {
+                        Id = product.Category.Id.ToString(),
+                        Name = product.Category.Name,
+                        Description = product.Category.Description,
+                        CreatedAt = product.Category.CreatedAt,
+                        Icon = product.Category.Icon,
+                    };
+                }
+                
+                if (product.Tags != null)
+                {
+                    productDto.Tags = new List<TagDto>();
+                    foreach (var tag in product.Tags)
+                    {
+                        productDto.Tags.Add(new TagDto
+                        {
+                            Id = tag.Id.ToString(),
+                            Name = tag.Name,
+                            Description = tag.Description,
+                            CreatedAt = tag.CreatedAt,
+                        });
+                    }
+                }
+                
+                if (reviews)
+                {
+                    var revs = await _context.Reviews.Where(r => r.Product.Id == product.Id).ToListAsync();
+                    
+                    foreach (var review in revs)
+                    {
+                        productDto.Reviews.Add(new ReviewDto
+                        {
+                            Id = review.Id.ToString(),
+                            Rating = review.Rating,
+                            CreatedAt = review.CreatedAt,
+                            Title = review.Title,
+                            Content = review.Content,
+                            Username = review.Username,
+                        });
+                    }
+                    
+                    productDto.Reviews = productDto.Reviews.OrderByDescending(r => r.CreatedAt).ToList();
+                }
+                
+                productsDto.Add(productDto);
+            }
+            
+            return productsDto.ToList();
+        } catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return null;
+        }
+    }
 }
 
 public interface IProductService
 {
     Task<string> AddProduct(AddProductModel model, long? userId);
     Task<List<ProductDto>?> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit);
+    Task<List<ProductDto>?> GetProductsByCategory(string category, bool reviews, string orderBy, string order, int page, int limit);
 }

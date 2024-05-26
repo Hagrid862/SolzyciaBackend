@@ -23,8 +23,6 @@ public class EventController: ControllerBase
     {
         long? userId = (long?) HttpContext.Items["UserId"];
         var result = await _eventService.AddEvent(model, userId);
-        Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + result);
-        Console.WriteLine(model.Dates);
         if (result == "success")
         {
             return Ok(new {message = "event created successfully"});
@@ -68,6 +66,32 @@ public class EventController: ControllerBase
         } else
         {
             List<EventDto> events = await _eventService.GetEvents(reviews, orderBy, order, page, limit);
+            if (events == null)
+            {
+                return NotFound(new { message = "No events found" });
+            }
+            return Ok(new {events = events});
+        }
+    }
+    
+    [HttpGet("category/{categoryId}")]
+    public async Task<IActionResult> GetEventsByCategory(string categoryId, [FromQuery] bool reviews = false, [FromQuery] string orderBy = "created_at", [FromQuery] string order = "desc", [FromQuery] int page = 1, [FromQuery] int limit = 25)
+    {
+        if (orderBy is not ("created_at" or "price" or "name" or "rating" or "popularity"))
+        {
+            return BadRequest(new { message = "Invalid orderBy parameter" });
+        } else if (order is not ("desc" or "asc"))
+        {
+            return BadRequest(new { message = "Invalid order parameter" });
+        } else if (page < 1)
+        {
+            return BadRequest(new { message = "Invalid page parameter" });
+        } else if (limit < 1)
+        {
+            return BadRequest(new { message = "Invalid limit parameter" });
+        } else
+        {
+            List<EventDto> events = await _eventService.GetEventsByCategory(categoryId, reviews, orderBy, order, page, limit);
             if (events == null)
             {
                 return NotFound(new { message = "No events found" });

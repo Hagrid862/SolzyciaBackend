@@ -78,4 +78,39 @@ public class ProductController: ControllerBase
         }
         
     }
+    
+    [HttpGet("category/{categoryId}")]
+    public async Task<IActionResult> GetProductsByCategory(string categoryId, [FromQuery] bool reviews = false, [FromQuery] string orderBy = "created_at", [FromQuery] string order = "desc", [FromQuery] int page = 1, [FromQuery] int limit = 25)
+    {
+        if (orderBy is not ("created_at" or "price" or "name" or "rating" or "popularity"))
+        {
+            return BadRequest(new { message = "Invalid orderBy parameter" });
+        } else if (order is not ("desc" or "asc"))
+        {
+            return BadRequest(new { message = "Invalid order parameter" });
+        } else if (page < 1)
+        {
+            return BadRequest(new { message = "Invalid page parameter" });
+        } else if (limit < 1)
+        {
+            return BadRequest(new { message = "Invalid limit parameter" });
+        }
+        
+        List<ProductDto> products = await _productService.GetProductsByCategory(categoryId, reviews, orderBy, order, page, limit);
+
+        if (products == null)
+        {
+            return NotFound(new
+            {
+                message = "No products found"
+            });
+        }
+        else
+        {
+            return Ok(new
+            {
+                products = products
+            });
+        }
+    }
 }

@@ -255,12 +255,120 @@ public class EventService: IEventService
             return e.Message;
         }
     }
-    
-    
+
+    public async Task<List<EventDto>> GetEventsByCategory(string categoryId, bool reviews, string orderBy, string order,
+        int page, int limit)
+    {
+        try
+        {
+            var query = _context.Events
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .Include(x => x.Dates)
+                .Where(x => x.Category.Id == long.Parse(categoryId))
+                .Skip((page - 1) * limit)
+                .Take(limit);
+
+            switch (orderBy)
+            {
+                case "price":
+                    query = order == "asc" ? query.OrderBy(x => x.Price) : query.OrderByDescending(x => x.Price);
+                    break;
+                case "name":
+                    query = order == "asc" ? query.OrderBy(x => x.Name) : query.OrderByDescending(x => x.Name);
+                    break;
+                // Add more cases as needed
+                default:
+                    query = order == "asc" ? query.OrderBy(x => x.CreatedAt) : query.OrderByDescending(x => x.CreatedAt);
+                    break;
+            }
+
+            var events = await query.ToListAsync();
+
+            if (events.Count == 0)
+            {
+                return null;
+            }
+
+            List<EventDto> eventsDto = new();
+
+            foreach (var @event in events)
+            {
+                Category? category = @event.Category;
+                EventDate[] dates = @event.Dates.ToArray();
+                List<Tag> tags = @event.Tags ?? new();
+                List<Review> reviewsList = @event.Reviews ?? new();
+
+                CategoryDto? categoryDto = null;
+
+                if (category != null)
+                {
+                    categoryDto = new CategoryDto
+                    {
+                        Id = category.Id.ToString(),
+                        Name = category.Name,
+                        Icon = category.Icon,
+                        Description = category.Description,
+                        CreatedAt = category.CreatedAt
+                    };
+                }
+
+                List<EventDateDto> datesDto = new List<EventDateDto>();
+
+                foreach (var date in dates)
+                {
+                    var dateDto = new EventDateDto
+                    {
+                        Id = date.Id.ToString(),
+                        Date = date.Date,
+                        Seats = date.Seats
+                    };
+                    datesDto.Add(dateDto);
+                }
+
+                List<TagDto>? tagsDto = null;
+
+                foreach (var tag in tags)
+                {
+                    var tagDto = new TagDto
+                    {
+                        Id = tag.Id.ToString(),
+                        Name = tag.Name,
+                        Description = tag.Description,
+                        CreatedAt = tag.CreatedAt
+                    };
+                    tagsDto.Add(tagDto);
+                }
+
+                var eventDto = new EventDto
+                {
+                    Id = @event.Id.ToString(),
+                    Name = @event.Name,
+                    Description = @event.Description,
+                    Time = @event.Time,
+                    Price = @event.Price,
+                    Images = @event.Images,
+                    Category = categoryDto ?? null,
+                    Tags = eventsDto.ToList(),
+                    Dates = datesDto ?? null,
+                    CreatedAt = @event.CreatedAt
+                };
+                eventsDto.Add(eventDto);
+            }
+
+            return eventsDto;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+    }
 }
 
 public interface IEventService
 {
     Task<List<EventDto>?> GetEvents(bool reviews, string orderBy, string order, int page, int limit);
     Task<string> AddEvent(AddEventModel model, long? userId);
+    Task<List<EventDto>> GetEventsByCategory(string categoryId, bool reviews, string orderBy, string order, int page, int limit);
 }
