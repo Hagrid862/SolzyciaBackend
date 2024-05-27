@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Backend.Dto;
 using Backend.Middlewares;
 using Backend.Services;
@@ -73,6 +74,19 @@ public class EventController: ControllerBase
             return Ok(new {events = events});
         }
     }
+    
+    [HttpGet("{eventId}")]
+    public async Task<IActionResult> GetEventById(string eventId, [FromQuery] bool reviews = false)
+    {
+        EventDto eventDto = await _eventService.GetEventById(eventId, reviews);
+        if (eventDto == null)
+        {
+            return NotFound(new { message = "Event not found" });
+        }
+
+        return Ok(new {eventDto = eventDto});
+    }
+    
     
     [HttpGet("category/{categoryId}")]
     public async Task<IActionResult> GetEventsByCategory(string categoryId, [FromQuery] bool reviews = false, [FromQuery] string orderBy = "created_at", [FromQuery] string order = "desc", [FromQuery] int page = 1, [FromQuery] int limit = 25)

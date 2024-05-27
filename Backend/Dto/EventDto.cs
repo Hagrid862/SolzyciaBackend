@@ -10,7 +10,7 @@ public class EventDto
     public CategoryDto? Category { get; set; }
     public List<string>? Images { get; set; }
     public List<EventDateDto>? Dates { get; set; }
-    public List<EventDto> Tags { get; set; }
+    public List<TagDto> Tags { get; set; }
     public List<ReviewDto>? Reviews { get; set; }
     public DateTime CreatedAt { get; set; }
 }
