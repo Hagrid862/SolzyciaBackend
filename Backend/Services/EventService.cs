@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services;
 
-public class EventService: IEventService
+public class EventService : IEventService
 {
     private readonly MainDbContext _context;
     public EventService(MainDbContext context)
@@ -122,9 +122,9 @@ public class EventService: IEventService
             Console.WriteLine(e.Message);
             return null;
         }
-        
+
     }
-    
+
     public async Task<EventDto?> GetEventById(string eventId, bool reviews)
     {
         try
@@ -320,12 +320,12 @@ public class EventService: IEventService
     {
         try
         {
-            List<DateSeat>? datesObject = JsonSerializer.Deserialize<List<DateSeat>>(model.Dates);            List<EventDate> dates = new();
+            List<DateSeat>? datesObject = JsonSerializer.Deserialize<List<DateSeat>>(model.Dates); List<EventDate> dates = new();
             if (datesObject == null)
             {
                 return "DATESEMPTY";
             }
-            
+
             for (int i = 0; i < datesObject.Count; i++)
             {
                 Console.WriteLine(datesObject[i].seats + " , " + datesObject[i].dateIso);
@@ -333,29 +333,29 @@ public class EventService: IEventService
                 {
                     return "SEATSINVALID";
                 }
-                
+
                 if (DateTime.Parse(datesObject[i].dateIso) < DateTime.Now)
                 {
                     return "DATEINVALID";
                 }
-                
+
                 var date = new EventDate
                 {
                     Id = Snowflake.GenerateId(),
                     Date = DateTime.Parse(datesObject[i].dateIso).ToUniversalTime(),
                     Seats = datesObject[i].seats
                 };
-                
+
                 await _context.EventDates.AddAsync(date);
                 dates.Add(date);
             }
 
             Console.WriteLine(model.Tags);
-            
+
             List<Tag> tags = new();
             if (model.Tags != null)
             {
-                List<string> tagsList = model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();                foreach (var tagName in tagsList)
+                List<string> tagsList = model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(); foreach (var tagName in tagsList)
                 {
                     if (!string.IsNullOrEmpty(tagName))
                     {
@@ -383,9 +383,9 @@ public class EventService: IEventService
                 model.Image4,
                 model.Image5
             ];
-            
+
             List<string> imagesBase64 = new();
-            
+
             foreach (var image in images)
             {
                 if (image == null)
@@ -419,7 +419,7 @@ public class EventService: IEventService
             {
                 category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == long.Parse(model.CategoryId));
             }
-            
+
             var @event = new Event
             {
                 Id = Snowflake.GenerateId(),
@@ -433,12 +433,13 @@ public class EventService: IEventService
                 Dates = dates,
                 CreatedAt = DateTime.UtcNow,
             };
-            
+
             await _context.Events.AddAsync(@event);
             await _context.SaveChangesAsync();
-            
+
             return "SUCCESS";
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             Console.WriteLine(e.Message);
             return e.Message;

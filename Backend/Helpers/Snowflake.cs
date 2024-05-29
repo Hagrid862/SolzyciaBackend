@@ -8,7 +8,7 @@ public static class Snowflake
         config = Configuration;
         machineId = GetMachineId();
     }
-    
+
     // Snowflake ID components
     private const long Epoch = 1609459200000; // January 1, 2021 (UTC)
     private const int TimestampBits = 41;

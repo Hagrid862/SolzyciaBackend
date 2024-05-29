@@ -3,12 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Data;
 
-public class MainDbContext: DbContext
+public class MainDbContext : DbContext
 {
-    public MainDbContext(DbContextOptions<MainDbContext> options): base(options)
+    public MainDbContext(DbContextOptions<MainDbContext> options) : base(options)
     {
     }
-    
+
     public DbSet<Product> Products { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Tag> Tags { get; set; }

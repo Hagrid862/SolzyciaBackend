@@ -8,36 +8,38 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services;
 
-public class ProductService: IProductService
+public class ProductService : IProductService
 {
     private readonly MainDbContext _context;
-    
+
     public ProductService(MainDbContext context)
     {
         _context = context;
     }
-        
+
     public async Task<string> AddProduct(AddProductModel model, long? userId)
     {
         try
         {
             if (userId == null)
                 return "ERROR";
-            
+
             Category? category = null;
-            
+
             Console.WriteLine("Category ID: " + model.CategoryId);
 
-            if (model.CategoryId != null) {
+            if (model.CategoryId != null)
+            {
                 category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.CategoryId));
 
                 if (category == null)
                     return "NOTFOUND";
             }
-            
+
             List<long> tagsId = [];
 
-            if (model.Tags != null) {
+            if (model.Tags != null)
+            {
                 foreach (var tag in model.Tags)
                 {
                     var tagEntity = await _context.Tags.FirstOrDefaultAsync(t => t.Name == tag);
@@ -60,7 +62,7 @@ public class ProductService: IProductService
                     }
                 }
             }
-            
+
             var images = new List<IFormFile?>
             {
                 model.Image0,
@@ -98,7 +100,7 @@ public class ProductService: IProductService
                 var base64 = $"data:{mimeType};base64,{Convert.ToBase64String(imageBytes)}";
                 imagesBase64.Add(base64);
             }
-            
+
             var newProduct = new Product
             {
                 Id = Snowflake.GenerateId(),
@@ -111,25 +113,26 @@ public class ProductService: IProductService
                 Category = category,
                 Tags = await _context.Tags.Where(t => tagsId.Contains(t.Id)).ToListAsync(),
             };
-            
+
             await _context.Products.AddAsync(newProduct);
             await _context.SaveChangesAsync();
-            
+
             return "SUCCESS";
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             Console.WriteLine(e);
             return "ERROR";
         }
     }
-    
+
     public async Task<List<ProductDto>?> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit)
     {
         try
         {
             var products = await _context.Products.Include(p => p.Category).Include(p => p.Tags).ToListAsync();
             var productsDto = new List<ProductDto>();
-            
+
             foreach (var product in products)
             {
                 var productDto = new ProductDto
@@ -144,7 +147,7 @@ public class ProductService: IProductService
                     Category = null,
                     Tags = null,
                 };
-                
+
                 if (product.Category != null)
                 {
                     productDto.Category = new CategoryDto
@@ -156,7 +159,7 @@ public class ProductService: IProductService
                         Icon = product.Category.Icon,
                     };
                 }
-                
+
                 if (product.Tags != null)
                 {
                     productDto.Tags = new List<TagDto>();
@@ -171,11 +174,11 @@ public class ProductService: IProductService
                         });
                     }
                 }
-                
+
                 if (reviews)
                 {
                     var revs = await _context.Reviews.Where(r => r.Product.Id == product.Id).ToListAsync();
-                    
+
                     foreach (var review in revs)
                     {
                         productDto.Reviews.Add(new ReviewDto
@@ -188,21 +191,22 @@ public class ProductService: IProductService
                             Username = review.Username,
                         });
                     }
-                    
+
                     productDto.Reviews = productDto.Reviews.OrderByDescending(r => r.CreatedAt).ToList();
                 }
-                
+
                 productsDto.Add(productDto);
             }
-            
+
             return productsDto.ToList();
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             Console.WriteLine(e);
             return null;
         }
     }
-    
+
     public async Task<List<ProductDto>?> GetProductsByCategory(string category, bool reviews, string orderBy, string order, int page, int limit)
     {
         try
@@ -210,7 +214,7 @@ public class ProductService: IProductService
             var categoryId = long.Parse(category);
             var products = await _context.Products.Include(p => p.Category).Include(p => p.Tags).Where(p => p.Category.Id == categoryId).ToListAsync();
             var productsDto = new List<ProductDto>();
-            
+
             foreach (var product in products)
             {
                 var productDto = new ProductDto
@@ -225,7 +229,7 @@ public class ProductService: IProductService
                     Category = null,
                     Tags = null,
                 };
-                
+
                 if (product.Category != null)
                 {
                     productDto.Category = new CategoryDto
@@ -237,7 +241,7 @@ public class ProductService: IProductService
                         Icon = product.Category.Icon,
                     };
                 }
-                
+
                 if (product.Tags != null)
                 {
                     productDto.Tags = new List<TagDto>();
@@ -252,11 +256,11 @@ public class ProductService: IProductService
                         });
                     }
                 }
-                
+
                 if (reviews)
                 {
                     var revs = await _context.Reviews.Where(r => r.Product.Id == product.Id).ToListAsync();
-                    
+
                     foreach (var review in revs)
                     {
                         productDto.Reviews.Add(new ReviewDto
@@ -269,15 +273,16 @@ public class ProductService: IProductService
                             Username = review.Username,
                         });
                     }
-                    
+
                     productDto.Reviews = productDto.Reviews.OrderByDescending(r => r.CreatedAt).ToList();
                 }
-                
+
                 productsDto.Add(productDto);
             }
-            
+
             return productsDto.ToList();
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             Console.WriteLine(e);
             return null;

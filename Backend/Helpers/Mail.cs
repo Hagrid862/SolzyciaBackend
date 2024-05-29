@@ -11,7 +11,7 @@ public static class Mail
     {
         _config = config;
     }
-    
+
     public static string Sent2FA(string address, string code)
     {
         try
@@ -41,7 +41,8 @@ public static class Mail
             }
 
             return "SUCCESS";
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             return "ERROR " + e.Message;
         }

@@ -9,15 +9,15 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ProductController: ControllerBase
+public class ProductController : ControllerBase
 {
     private readonly IProductService _productService;
-    
+
     public ProductController(IProductService productService)
     {
         _productService = productService;
     }
-    
+
     [HttpPost]
     [AuthenticateAdminTokenMiddleware]
     public async Task<IActionResult> CreateProduct([FromForm] AddProductModel model)
@@ -49,17 +49,20 @@ public class ProductController: ControllerBase
         if (orderBy is not ("created_at" or "price" or "name" or "rating" or "popularity"))
         {
             return BadRequest(new { message = "Invalid orderBy parameter" });
-        } else if (order is not ("desc" or "asc"))
+        }
+        else if (order is not ("desc" or "asc"))
         {
             return BadRequest(new { message = "Invalid order parameter" });
-        } else if (page < 1)
+        }
+        else if (page < 1)
         {
             return BadRequest(new { message = "Invalid page parameter" });
-        } else if (limit < 1)
+        }
+        else if (limit < 1)
         {
             return BadRequest(new { message = "Invalid limit parameter" });
         }
-        
+
         List<ProductDto> products = await _productService.GetAllProducts(reviews, orderBy, order, page, limit);
 
         if (products == null)
@@ -76,26 +79,29 @@ public class ProductController: ControllerBase
                 products = products
             });
         }
-        
+
     }
-    
+
     [HttpGet("category/{categoryId}")]
     public async Task<IActionResult> GetProductsByCategory(string categoryId, [FromQuery] bool reviews = false, [FromQuery] string orderBy = "created_at", [FromQuery] string order = "desc", [FromQuery] int page = 1, [FromQuery] int limit = 25)
     {
         if (orderBy is not ("created_at" or "price" or "name" or "rating" or "popularity"))
         {
             return BadRequest(new { message = "Invalid orderBy parameter" });
-        } else if (order is not ("desc" or "asc"))
+        }
+        else if (order is not ("desc" or "asc"))
         {
             return BadRequest(new { message = "Invalid order parameter" });
-        } else if (page < 1)
+        }
+        else if (page < 1)
         {
             return BadRequest(new { message = "Invalid page parameter" });
-        } else if (limit < 1)
+        }
+        else if (limit < 1)
         {
             return BadRequest(new { message = "Invalid limit parameter" });
         }
-        
+
         List<ProductDto> products = await _productService.GetProductsByCategory(categoryId, reviews, orderBy, order, page, limit);
 
         if (products == null)

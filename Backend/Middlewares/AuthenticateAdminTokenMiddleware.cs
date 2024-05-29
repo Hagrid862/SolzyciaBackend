@@ -11,7 +11,7 @@ public class AuthenticateAdminTokenMiddleware : Attribute, IAsyncActionFilter
         try
         {
             var token = context.HttpContext.Request.Headers["Authorization"].ToString().Split(" ")[1];
-            
+
             if (string.IsNullOrEmpty(token))
             {
                 context.Result = new UnauthorizedResult();
@@ -29,7 +29,8 @@ public class AuthenticateAdminTokenMiddleware : Attribute, IAsyncActionFilter
                     context.Result = new UnauthorizedResult();
                 }
             }
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             context.Result = new UnauthorizedResult();
         }
