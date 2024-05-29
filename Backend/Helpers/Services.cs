@@ -12,6 +12,7 @@ public static class Services
         Mail.Init(builder.Configuration);
 
         builder.Services.AddScoped<IAdminService, AdminService>();
+        builder.Services.AddScoped<ICartService, CartService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<IProductService, ProductService>();
         builder.Services.AddScoped<IEventService, EventService>();

@@ -6,17 +6,17 @@ namespace Backend;
 [Route("api/[controller]")]
 public class CartController : ControllerBase
 {
-    private readonly CartService _cartService;
+    private readonly ICartService _cartService;
 
-    public CartController(CartService cartService)
+    public CartController(ICartService cartService)
     {
         _cartService = cartService;
     }
   
-    [HttpGet]
-    public async Task<ActionResult<CartItemDto>> GetCartItem([FromBody] GetCartItemModel model)
+    [HttpGet("{itemId}")]
+    public async Task<ActionResult<CartItemDto>> GetCartItem([FromRoute] long itemId, [FromQuery] GetCartItemModel model)
     {
-        var cartItem = await _cartService.GetCartItem(model.ItemId, model.Quantity, model.IsEvent);
+        var cartItem = await _cartService.GetCartItem(itemId, model.Quantity, model.IsEvent);
         if (cartItem == null)
         {
             return NotFound();

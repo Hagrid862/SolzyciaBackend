@@ -5,7 +5,7 @@ public class CartItemDto
     public required bool IsEvent { get; set; }
     public required long ItemId { get; set; }
     public required string Name { get; set; }
-    public required decimal Price { get; set; }
+    public required float Price { get; set; }
     public required int Quantity { get; set; }
     public required string Image { get; set; }
     public bool IsOnSale { get; set; } = false;
