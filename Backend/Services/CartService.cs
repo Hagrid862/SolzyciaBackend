@@ -25,7 +25,7 @@ public class CartService : ICartService
 
             var dto = new CartItemDto {
                 ItemId = product.Id.ToString(),
-                IsEvent = false,
+                IsEvent = true,
                 Name = product.Name,
                 Price = product.Price,
                 Quantity = quantity,
