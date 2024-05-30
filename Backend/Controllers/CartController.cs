@@ -12,7 +12,7 @@ public class CartController : ControllerBase
     {
         _cartService = cartService;
     }
-  
+
     [HttpGet("{itemId}")]
     public async Task<ActionResult<CartItemDto>> GetCartItem([FromRoute] long itemId, [FromQuery] GetCartItemModel model)
     {

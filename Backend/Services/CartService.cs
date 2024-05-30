@@ -12,9 +12,10 @@ public class CartService : ICartService
         _context = context;
     }
 
-    public async Task<CartItemDto?> GetCartItem(long productId, int quantity,  bool isEvent)
+    public async Task<CartItemDto?> GetCartItem(long productId, int quantity, bool isEvent)
     {
-        if (isEvent) {
+        if (isEvent)
+        {
             var product = await _context.Events.FirstOrDefaultAsync(x => x.Id == productId);
             Console.WriteLine(product == null ? "is null" : "is not null");
 
@@ -23,7 +24,8 @@ public class CartService : ICartService
                 return null;
             }
 
-            var dto = new CartItemDto {
+            var dto = new CartItemDto
+            {
                 ItemId = product.Id.ToString(),
                 IsEvent = true,
                 Name = product.Name,
@@ -34,7 +36,9 @@ public class CartService : ICartService
             };
 
             return dto;
-        } else {
+        }
+        else
+        {
             var product = await _context.Products.FirstOrDefaultAsync(x => x.Id == productId);
             Console.WriteLine(product == null ? "is null" : "is not null");
 
@@ -43,13 +47,14 @@ public class CartService : ICartService
                 return null;
             }
 
-            var dto = new CartItemDto {
+            var dto = new CartItemDto
+            {
                 ItemId = product.Id.ToString(),
                 IsEvent = false,
                 Name = product.Name,
                 Price = product.Price,
                 Quantity = quantity,
-                Image = product.Images != null && product.Images.Any() ? product.Images[0] : "noimage", 
+                Image = product.Images != null && product.Images.Any() ? product.Images[0] : "noimage",
                 IsOnSale = false,
             };
 
