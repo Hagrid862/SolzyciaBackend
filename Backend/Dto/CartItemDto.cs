@@ -3,7 +3,7 @@
 public class CartItemDto
 {
     public required bool IsEvent { get; set; }
-    public required long ItemId { get; set; }
+    public required string ItemId { get; set; }
     public required string Name { get; set; }
     public required float Price { get; set; }
     public required int Quantity { get; set; }

@@ -24,7 +24,7 @@ public class CartService : ICartService
             }
 
             var dto = new CartItemDto {
-                ItemId = product.Id,
+                ItemId = product.Id.ToString(),
                 IsEvent = false,
                 Name = product.Name,
                 Price = product.Price,
@@ -44,7 +44,7 @@ public class CartService : ICartService
             }
 
             var dto = new CartItemDto {
-                ItemId = product.Id,
+                ItemId = product.Id.ToString(),
                 IsEvent = false,
                 Name = product.Name,
                 Price = product.Price,
