@@ -14,7 +14,8 @@ public static class Services
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<ICartService, CartService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
-        builder.Services.AddScoped<IProductService, ProductService>();
         builder.Services.AddScoped<IEventService, EventService>();
+        builder.Services.AddScoped<IOrderService, OrderService>();
+        builder.Services.AddScoped<IProductService, ProductService>();
     }
 }
