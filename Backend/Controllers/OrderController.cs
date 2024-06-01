@@ -18,6 +18,10 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> CreateOrder([FromBody] CreateNewOrderModel model)
     {
         var result = await _orderService.CreateOrder(model);
-        return Ok(JsonSerializer.Serialize(new { orderId = result.Id }));
+        if (result != null) {
+            return Ok(JsonSerializer.Serialize( new { orderId = result.Id }));
+        } else {
+            return BadRequest();
+        }
     }
 }

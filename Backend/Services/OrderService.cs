@@ -1,6 +1,7 @@
 ﻿using Backend.Data;
 using Backend.Helpers;
 using Backend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend;
 
@@ -13,23 +14,30 @@ public class OrderService : IOrderService
         _context = context;
     }
 
-    public async Task<Order> CreateOrder(CreateNewOrderModel model)
+    public async Task<Order?> CreateOrder(CreateNewOrderModel model)
     {
-        var order = new Order
+        try
         {
-            Id = Snowflake.GenerateId(),
-            Products = model.Products.Select(x => new OrderProduct { IsEvent = x.IsEvent, Id = x.Id, Quantity = x.Quantity }).ToList(),
-            CreatedAt = DateTime.UtcNow,
-        };
+            var order = new Order
+            {
+                Id = Snowflake.GenerateId(),
+                Products = model.Products.Select(x => new OrderProduct { Id = Snowflake.GenerateId(), ProductId = long.Parse(x.Id), IsEvent = x.IsEvent, Quantity = x.Quantity }).ToList(),
+                CreatedAt = DateTime.UtcNow,
+            };
 
-        await _context.Orders.AddAsync(order);
-        await _context.SaveChangesAsync();
+            await _context.Orders.AddAsync(order);
+            await _context.SaveChangesAsync();
 
-        return order;
+            return order;
+        } catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return null;
+        }
     }
 }
 
 public interface IOrderService
 {
-    public Task<Order> CreateOrder(CreateNewOrderModel model);
+    public Task<Order?> CreateOrder(CreateNewOrderModel model);
 }
