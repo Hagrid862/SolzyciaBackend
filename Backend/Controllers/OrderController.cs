@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Backend;
 
@@ -17,6 +18,6 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> CreateOrder([FromBody] CreateNewOrderModel model)
     {
         var result = await _orderService.CreateOrder(model);
-        return Ok(result);
+        return Ok(JsonSerializer.Serialize(new { orderId = result.Id }));
     }
 }

@@ -19,19 +19,7 @@ public class OrderService : IOrderService
         {
             Id = Snowflake.GenerateId(),
             Products = model.Products.Select(x => new OrderProduct { IsEvent = x.IsEvent, Id = x.Id, Quantity = x.Quantity }).ToList(),
-            Address = model.Address,
-            Address2 = model.Address2,
-            City = model.City,
-            State = model.State,
-            Zip = model.Zip,
-            Country = model.Country,
-            Phone = model.Phone,
-            Email = model.Email,
-            Name = model.Name,
-            LastName = model.LastName,
-            Status = model.Status,
-            PaymentMethod = model.PaymentMethod,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _context.Orders.AddAsync(order);
