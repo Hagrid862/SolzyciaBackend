@@ -18,10 +18,31 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> CreateOrder([FromBody] CreateNewOrderModel model)
     {
         var result = await _orderService.CreateOrder(model);
-        if (result != null) {
-            return Ok(JsonSerializer.Serialize( new { orderId = result.Id }));
-        } else {
-            return BadRequest();
+        if (result.status == "SUCCESS")
+        {
+            return Ok(JsonSerializer.Serialize(new { orderId = result.orderId }));
+        }
+        else
+        {
+            return StatusCode(500);
+        }
+    }
+
+    [HttpGet("{orderId}")]
+    public async Task<IActionResult> GetOrder(long orderId)
+    {
+        var result = await _orderService.GetOrder(orderId);
+        if (result.status == "NOT_FOUND")
+        {
+            return NotFound();
+        }
+        if (result.status == "INTERNAL")
+        {
+            return StatusCode(500);
+        }
+        else
+        {
+            return Ok(JsonSerializer.Serialize(result.order));
         }
     }
 }
