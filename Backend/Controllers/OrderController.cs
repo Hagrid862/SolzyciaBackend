@@ -45,4 +45,26 @@ public class OrderController : ControllerBase
             return Ok(JsonSerializer.Serialize(result.order));
         }
     }
+
+    [HttpGet("{orderId}/products")]
+    public async Task<IActionResult> GetOrderProducts(long orderId)
+    {
+        var result = await _orderService.GetOrderProducts(orderId);
+        if (result.status == "NOT_FOUND")
+        {
+            return NotFound();
+        }
+        else if (result.status == "TOO_MANY")
+        {
+            return StatusCode(400, new { error = "TOO_MANY_PRODUCTS" });
+        }
+        else if (result.status == "INTERNAL")
+        {
+            return StatusCode(500);
+        }
+        else
+        {
+            return Ok(JsonSerializer.Serialize(new { products = result.products, events = result.events }));
+        }
+    }
 }
