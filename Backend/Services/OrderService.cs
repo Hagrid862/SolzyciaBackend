@@ -109,13 +109,10 @@ public class OrderService : IOrderService
                     Console.WriteLine(eventData.Name);
 
                     if (eventData.Dates.Count == 0) {
-                        Console.WriteLine(eventData.Name + " no dates");
                         return;
                     } else if (eventData.Dates.Count > 64) {
-                        Console.WriteLine(eventData.Name + " too many dates");
                         return;
                     } else if (eventData.Tags?.Count > 64) {
-                        Console.WriteLine(eventData.Name + " too many tags");
                         return;
                     }
 
