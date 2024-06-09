@@ -10,6 +10,7 @@ public class Event
     public Category? Category { get; set; }
     public List<string>? Images { get; set; }
     public List<EventDate> Dates { get; set; }
+    public EventLocation? Location { get; set; }
     public List<Tag>? Tags { get; set; }
     public List<Review>? Reviews { get; set; }
     public DateTime CreatedAt { get; set; }

@@ -13,6 +13,7 @@ public class AddEventModel
     public IFormFile? Image4 { get; set; }
     public IFormFile? Image5 { get; set; }
     public required string Dates { get; set; }
+    public required string Location { get; set; }
     public string? CategoryId { get; set; }
     public string? Tags { get; set; }
 }
