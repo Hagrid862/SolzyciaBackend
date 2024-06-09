@@ -20,7 +20,7 @@ public class OrderController : ControllerBase
         var result = await _orderService.CreateOrder(model);
         if (result.status == "SUCCESS")
         {
-            return Ok(JsonSerializer.Serialize(new { orderId = result.orderId }));
+            return Ok(JsonSerializer.Serialize(new { orderId = result.orderId.ToString() }));
         }
         else
         {
