@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "qyW/tmzxJdmd37NPdvc68Cf1RF2gCY/OJatjiEGZTE7yFVCIM5DzBJrtOx6tItBZjtnwP3inhzROIx912fgRXA==",
+  "dgSpecHash": "f+ZRbDdnDYdeifCTxziGML8AVvKHXcfcuauMOJXsWtrtS9Rw14m9k9J0ApcsXP9WIA9yc8re9ERCc8QsdsKXRA==",
   "success": true,
-  "projectFilePath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/Backend.csproj",
+  "projectFilePath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/backend/Backend.csproj",
   "expectedPackageFiles": [
     "/Users/hagrid/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
     "/Users/hagrid/.nuget/packages/microsoft.aspnetcore.openapi/8.0.1/microsoft.aspnetcore.openapi.8.0.1.nupkg.sha512",

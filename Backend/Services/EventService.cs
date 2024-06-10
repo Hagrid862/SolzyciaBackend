@@ -328,7 +328,6 @@ public class EventService : IEventService
 
             for (int i = 0; i < datesObject.Count; i++)
             {
-                Console.WriteLine(datesObject[i].seats + " , " + datesObject[i].dateIso);
                 if (datesObject[i].seats < 1)
                 {
                     return "SEATSINVALID";
@@ -342,36 +341,16 @@ public class EventService : IEventService
                 var date = new EventDate
                 {
                     Id = Snowflake.GenerateId(),
-                    Date = DateTime.Parse(datesObject[i].dateIso).ToUniversalTime(),
-                    Seats = datesObject[i].seats
+                    Date = DateTime.Parse(datesObject[i].dateIso)
+                        .ToUniversalTime(),
+                    Seats = datesObject[i].seats,
+                    Location = null
                 };
 
                 await _context.EventDates.AddAsync(date);
                 dates.Add(date);
             }
 
-            EventLocation? location = null;
-
-            if (model.Location != null) {
-                try {
-                    var locationObj = JsonSerializer.Deserialize<Dictionary<string, string>>(model.Location);
-
-                    if (locationObj != null && locationObj["street"] != null && locationObj["houseNumber"] != null && locationObj["postalCode"] != null && locationObj["city"] != null) {
-                        location = new EventLocation
-                        {
-                            Id = Snowflake.GenerateId(),
-                            Street = locationObj["street"],
-                            HouseNumber = locationObj["houseNumber"],
-                            PostalCode = locationObj["postalCode"],
-                            City = locationObj["city"]
-                        };
-                    } else {
-                        location = null;
-                    }
-                } catch {
-                    location = null;
-                }
-            }
             List<Tag> tags = new();
             if (model.Tags != null)
             {
@@ -450,7 +429,6 @@ public class EventService : IEventService
                 Images = imagesBase64,
                 Category = category,
                 Tags = tags,
-                Location = location,
                 Dates = dates,
                 CreatedAt = DateTime.UtcNow,
             };
