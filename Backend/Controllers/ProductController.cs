@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Backend.Dto;
 using Backend.Middlewares;
 using Backend.Services;
@@ -74,10 +76,7 @@ public class ProductController : ControllerBase
         }
         else
         {
-            return Ok(new
-            {
-                products = products
-            });
+            return Ok(JsonSerializer.Serialize(new { products = products }));
         }
 
     }
@@ -113,10 +112,24 @@ public class ProductController : ControllerBase
         }
         else
         {
-            return Ok(new
+            return Ok(JsonSerializer.Serialize(new { products = products}));
+        }
+    }
+
+    [HttpGet("{productId}")]
+    public async Task<IActionResult> GetProductById(string productId)
+    {
+        ProductDto product = await _productService.GetProductById(productId);
+        if (product == null)
+        {
+            return NotFound(new
             {
-                products = products
+                message = "Product not found"
             });
+        }
+        else
+        {
+            return Ok(JsonSerializer.Serialize(new { products = product }));
         }
     }
 }

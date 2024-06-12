@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/backend/Backend.csproj": {}
+    "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/Backend.csproj": {}
   },
   "projects": {
-    "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/backend/Backend.csproj": {
+    "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/Backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/backend/Backend.csproj",
+        "projectUniqueName": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/Backend.csproj",
         "projectName": "Backend",
-        "projectPath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/backend/Backend.csproj",
+        "projectPath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/Backend.csproj",
         "packagesPath": "/Users/hagrid/.nuget/packages/",
-        "outputPath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/backend/obj/",
+        "outputPath": "/Users/hagrid/Developer/Github/szkolne-pierdoly/solzycia/Backend/Backend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/hagrid/.nuget/NuGet/NuGet.Config"

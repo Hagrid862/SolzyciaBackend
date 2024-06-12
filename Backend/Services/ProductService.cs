@@ -288,6 +288,72 @@ public class ProductService : IProductService
             return null;
         }
     }
+
+    public async Task<ProductDto?> GetProductById(string productId) {
+        try 
+        {
+            var product = await _context.Products
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .FirstOrDefaultAsync(x => x.Id == long.Parse(productId));
+
+            if (product == null)
+            {
+                return null;
+            }
+
+            Category? category = product.Category;
+            List<Tag> tags = product.Tags ?? new();
+
+            CategoryDto? categoryDto = null;
+
+            if (category != null)
+            {
+                categoryDto = new CategoryDto
+                {
+                    Id = category.Id.ToString(),
+                    Name = category.Name,
+                    Icon = category.Icon,
+                    Description = category.Description,
+                    CreatedAt = category.CreatedAt
+                };
+            }
+
+            List<TagDto>? tagsDto = null;
+
+            foreach (var tag in tags)
+            {
+                var tagDto = new TagDto
+                {
+                    Id = tag.Id.ToString(),
+                    Name = tag.Name,
+                    Description = tag.Description,
+                    CreatedAt = tag.CreatedAt
+                };
+                tagsDto.Add(tagDto);
+            }
+
+            var productDto = new ProductDto
+            {
+                Id = product.Id.ToString(),
+                Name = product.Name,
+                Title = product.Title,
+                Description = product.Description,
+                Price = product.Price,
+                Images = product.Images,
+                CreatedAt = product.CreatedAt,
+                Category = categoryDto ?? null,
+                Tags = tagsDto
+            };
+
+            return productDto;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return null;
+        }
+    }
 }
 
 public interface IProductService
@@ -295,4 +361,5 @@ public interface IProductService
     Task<string> AddProduct(AddProductModel model, long? userId);
     Task<List<ProductDto>?> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit);
     Task<List<ProductDto>?> GetProductsByCategory(string category, bool reviews, string orderBy, string order, int page, int limit);
+    Task<ProductDto?> GetProductById(string productId);
 }
