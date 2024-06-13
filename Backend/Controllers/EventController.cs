@@ -75,7 +75,7 @@ public class EventController : ControllerBase
             {
                 return NotFound(new { message = "No events found" });
             }
-            return Ok(new { events = events });
+            return Ok(JsonSerializer.Serialize(new {events = events}));
         }
     }
 
@@ -88,7 +88,7 @@ public class EventController : ControllerBase
             return NotFound(new { message = "Event not found" });
         }
 
-        return Ok(new { eventDto = eventDto });
+            return Ok(JsonSerializer.Serialize(new {eventDto = events}));
     }
 
 
@@ -118,7 +118,7 @@ public class EventController : ControllerBase
             {
                 return NotFound(new { message = "No events found" });
             }
-            return Ok(new { events = events });
+            return Ok(JsonSerializer.Serialize(new {events = events}));
         }
     }
 }
