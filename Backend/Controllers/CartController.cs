@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Backend;
 
@@ -22,6 +23,6 @@ public class CartController : ControllerBase
             return NotFound();
         }
 
-        return Ok(cartItem);
+        return Ok(JsonSerializer.Serialize(cartItem));
     }
 }

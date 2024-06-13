@@ -1,5 +1,6 @@
 ﻿using Backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
 namespace Backend;
 
@@ -57,6 +58,8 @@ public class CartService : ICartService
                 Image = product.Images != null && product.Images.Any() ? product.Images[0] : "noimage",
                 IsOnSale = false,
             };
+
+            Console.WriteLine(dto.Price);
 
             return dto;
         }

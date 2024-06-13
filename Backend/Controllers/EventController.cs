@@ -88,7 +88,7 @@ public class EventController : ControllerBase
             return NotFound(new { message = "Event not found" });
         }
 
-            return Ok(JsonSerializer.Serialize(new {eventDto = events}));
+            return Ok(JsonSerializer.Serialize(new {eventDto = eventDto}));
     }
 
 
