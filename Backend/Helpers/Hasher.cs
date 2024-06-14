@@ -12,13 +12,13 @@ public static class Hasher
         rng.GetBytes(salt);
         return Convert.ToBase64String(salt);
     }
-    
+
     public static string GetHash(string password, string salt)
     {
         var pbkdf2 = new Rfc2898DeriveBytes(password, Convert.FromBase64String(salt), 10000);
         return Convert.ToBase64String(pbkdf2.GetBytes(256 / 8));
     }
-    
+
     public static bool Verify(string password, string salt, string hash)
     {
         return GetHash(password, salt) == hash;

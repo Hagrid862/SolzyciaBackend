@@ -8,12 +8,12 @@ namespace Backend.Services;
 public class AdminService : IAdminService
 {
     private readonly MainDbContext _context;
-    
+
     public AdminService(MainDbContext context)
     {
         _context = context;
     }
-    
+
     public async Task<string> Login(string userName, string password, bool remember, string clientIp)
     {
         try
@@ -47,18 +47,19 @@ public class AdminService : IAdminService
             await _context.TwoFactorAuths.AddAsync(twoFactorRequest);
             await _context.SaveChangesAsync();
             return "SUCCESS";
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             return "ERROR";
         }
     }
-    
+
     public async Task<(string access, string? refresh)> VerifyOtp(string code, string clientIp)
     {
         try
         {
             var twoFactorRequest = await _context.TwoFactorAuths.Include(twoFactorAuth => twoFactorAuth.Admin).FirstOrDefaultAsync(r => r.IP == clientIp && r.Code == code);
-            
+
             if (twoFactorRequest == null)
                 return ("NOTFOUND", null);
 
@@ -75,7 +76,7 @@ public class AdminService : IAdminService
                 var (refresh, access) = JWT.GenerateLongTermAdminToken(admin);
                 if (refresh == "NOTINITIALIZED" || access == "NOTINITIALIZED" || refresh == "ERROR" || access == "ERROR")
                     return ("INTERNALERROR", null);
-                
+
                 twoFactorRequest.IsUsed = true;
                 _context.TwoFactorAuths.Update(twoFactorRequest);
                 await _context.SaveChangesAsync();
@@ -86,18 +87,19 @@ public class AdminService : IAdminService
                 var token = JWT.GenerateAdminToken(admin);
                 if (token == "NOTINITIALIZED" || token == "ERROR")
                     return ("INTERNALERROR", "");
-                
+
                 twoFactorRequest.IsUsed = true;
                 _context.TwoFactorAuths.Update(twoFactorRequest);
                 await _context.SaveChangesAsync();
                 return (token, null);
             }
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             return ("INTERNALERROR", "");
         }
     }
-    
+
     public async Task<(bool exists, bool valid)> VerifyToken(string token)
     {
         try
@@ -109,7 +111,7 @@ public class AdminService : IAdminService
             return (false, false);
         }
     }
-    
+
     public async Task<(string access, string refresh)> RefreshToken(string refreshToken)
     {
         try

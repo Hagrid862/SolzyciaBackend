@@ -8,15 +8,15 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CategoryController: ControllerBase
+public class CategoryController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
-    
+
     public CategoryController(ICategoryService categoryService)
     {
         _categoryService = categoryService;
     }
-    
+
     [HttpGet]
     [AuthenticateAdminTokenMiddleware]
     public async Task<IActionResult> GetCategories()
@@ -24,7 +24,7 @@ public class CategoryController: ControllerBase
         var categories = await _categoryService.GetCategories();
         return Ok(categories);
     }
-    
+
     [HttpPost]
     [AuthenticateAdminTokenMiddleware]
     public async Task<IActionResult> AddCategory([FromBody] AddCategoryModel model)
@@ -39,7 +39,7 @@ public class CategoryController: ControllerBase
             return BadRequest(new { message = "Something went wrong" });
         }
     }
-    
+
     [HttpPut]
     [AuthenticateAdminTokenMiddleware]
     public async Task<IActionResult> UpdateCategory([FromBody] UpdateCategoryModel model)

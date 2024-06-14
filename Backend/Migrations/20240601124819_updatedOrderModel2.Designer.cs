@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    partial class MainDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240601124819_updatedOrderModel2")]
+    partial class updatedOrderModel2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -134,9 +137,6 @@ namespace Backend.Migrations
                     b.Property<long>("EventId")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("LocationId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("Seats")
                         .HasColumnType("integer");
 
@@ -144,38 +144,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.HasIndex("LocationId");
-
                     b.ToTable("EventDates");
-                });
-
-            modelBuilder.Entity("Backend.Models.EventLocation", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HouseNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Street")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("EventLocation");
                 });
 
             modelBuilder.Entity("Backend.Models.Order", b =>
@@ -460,17 +429,13 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.EventDate", b =>
                 {
-                    b.HasOne("Backend.Models.Event", null)
+                    b.HasOne("Backend.Models.Event", "Event")
                         .WithMany("Dates")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Backend.Models.EventLocation", "Location")
-                        .WithMany()
-                        .HasForeignKey("LocationId");
-
-                    b.Navigation("Location");
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("Backend.Models.Product", b =>
