@@ -289,8 +289,9 @@ public class ProductService : IProductService
         }
     }
 
-    public async Task<ProductDto?> GetProductById(string productId) {
-        try 
+    public async Task<ProductDto?> GetProductById(string productId)
+    {
+        try
         {
             var product = await _context.Products
                 .Include(x => x.Category)
@@ -321,16 +322,19 @@ public class ProductService : IProductService
 
             List<TagDto>? tagsDto = null;
 
-            foreach (var tag in tags)
+            if (tags.Count > 0)
             {
-                var tagDto = new TagDto
+                foreach (var tag in tags)
                 {
-                    Id = tag.Id.ToString(),
-                    Name = tag.Name,
-                    Description = tag.Description,
-                    CreatedAt = tag.CreatedAt
-                };
-                tagsDto.Add(tagDto);
+                    var tagDto = new TagDto
+                    {
+                        Id = tag.Id.ToString(),
+                        Name = tag.Name,
+                        Description = tag.Description,
+                        CreatedAt = tag.CreatedAt
+                    };
+                    tagsDto?.Add(tagDto);
+                }
             }
 
             var productDto = new ProductDto
@@ -354,6 +358,138 @@ public class ProductService : IProductService
             return null;
         }
     }
+
+    public async Task<(string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model)
+    {
+        try
+        {
+            var product = await _context.Products
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .FirstOrDefaultAsync(x => x.Id == long.Parse(productId));
+
+            if (product == null)
+            {
+                return (status: "NOTFOUND", dto: null);
+            }
+
+            Category? category = null;
+
+            if (model.CategoryId != null)
+            {
+                category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.CategoryId));
+
+                if (category == null)
+                    return (status: "NOTFOUND", dto: null);
+            }
+
+            List<long> tagsId = [];
+
+            if (model.Tags != null)
+            {
+                foreach (var tag in model.Tags)
+                {
+                    var tagEntity = await _context.Tags.FirstOrDefaultAsync(t => t.Name == tag);
+                    if (tagEntity == null)
+                    {
+                        var newTag = new Tag
+                        {
+                            Id = Snowflake.GenerateId(),
+                            Name = tag,
+                            Description = "",
+                            CreatedAt = default
+                        };
+                        await _context.Tags.AddAsync(newTag);
+                        await _context.SaveChangesAsync();
+                        tagsId.Add(newTag.Id);
+                    }
+                    else
+                    {
+                        tagsId.Add(tagEntity.Id);
+                    }
+                }
+            }
+
+            var images = new List<IFormFile?>
+            {
+                model.Image0,
+                model.Image1,
+                model.Image2,
+                model.Image3,
+                model.Image4,
+                model.Image5
+            };
+
+            var imagesBase64 = new List<string>();
+
+            foreach (var image in images)
+            {
+                if (image == null)
+                    continue;
+                var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+                if (string.IsNullOrEmpty(extension) || !extension.Equals(".jpg") && !extension.Equals(".png") && !extension.Equals(".jpeg") && !extension.Equals(".webp"))
+                {
+                    throw new Exception("Invalid image format");
+                }
+
+                string mimeType = extension switch
+                {
+                    ".jpg" => "image/jpeg",
+                    ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".webp" => "image/webp",
+                    _ => throw new Exception("Invalid image format")
+                };
+
+                using var ms = new MemoryStream();
+                await image.CopyToAsync(ms);
+                var imageBytes = ms.ToArray();
+
+                var base64 = $"data:{mimeType};base64,{Convert.ToBase64String(imageBytes)}";
+                imagesBase64.Add(base64);
+            }
+
+            product.Name = model.Name;
+            product.Title = model.Title;
+            product.Description = model.Description;
+            product.Price = model.Price;
+            product.Images = imagesBase64;
+            product.Category = category;
+            product.Tags = await _context.Tags.Where(t => tagsId.Contains(t.Id)).ToListAsync();
+
+            await _context.SaveChangesAsync();
+
+            return (status: "SUCCESS", dto: new ProductDto
+            {
+                Id = product.Id.ToString(),
+                Name = product.Name,
+                Title = product.Title,
+                Description = product.Description,
+                Price = product.Price,
+                Images = product.Images,
+                CreatedAt = product.CreatedAt,
+                Category = new CategoryDto
+                {
+                    Id = category.Id.ToString(),
+                    Name = category.Name,
+                    Description = category.Description,
+                    CreatedAt = category.CreatedAt,
+                    Icon = category.Icon,
+                },
+                Tags = product.Tags.Select(t => new TagDto
+                {
+                    Id = t.Id.ToString(),
+                    Name = t.Name,
+                    Description = t.Description,
+                    CreatedAt = t.CreatedAt
+                }).ToList()
+            });
+        }
+        catch
+        {
+            return (status: "INTERNAL", dto: null);
+        }
+    }
 }
 
 public interface IProductService
@@ -362,4 +498,5 @@ public interface IProductService
     Task<List<ProductDto>?> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit);
     Task<List<ProductDto>?> GetProductsByCategory(string category, bool reviews, string orderBy, string order, int page, int limit);
     Task<ProductDto?> GetProductById(string productId);
+    Task<(string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model);
 }

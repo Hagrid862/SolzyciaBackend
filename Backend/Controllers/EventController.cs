@@ -75,7 +75,7 @@ public class EventController : ControllerBase
             {
                 return NotFound(new { message = "No events found" });
             }
-            return Ok(JsonSerializer.Serialize(new {events = events}));
+            return Ok(JsonSerializer.Serialize(new { events = events }));
         }
     }
 
@@ -88,7 +88,7 @@ public class EventController : ControllerBase
             return NotFound(new { message = "Event not found" });
         }
 
-            return Ok(JsonSerializer.Serialize(new {eventDto = eventDto}));
+        return Ok(JsonSerializer.Serialize(new { eventDto = eventDto }));
     }
 
 
@@ -118,7 +118,22 @@ public class EventController : ControllerBase
             {
                 return NotFound(new { message = "No events found" });
             }
-            return Ok(JsonSerializer.Serialize(new {events = events}));
+            return Ok(JsonSerializer.Serialize(new { events = events }));
         }
     }
+
+    // [HttpPatch("{eventId}")]
+    // [AuthenticateAdminTokenMiddleware]
+    // public async Task<IActionResult> UpdateEvent(string eventId, UpdateEventModel model)
+    // {
+    //     var result = await _eventService.UpdateEvent(eventId, model);
+    //     if (result == "success")
+    //     {
+    //         return Ok(new { message = "event updated successfully" });
+    //     }
+    //     else
+    //     {
+    //         return StatusCode(500, new { message = result });
+    //     }
+    // }
 }
