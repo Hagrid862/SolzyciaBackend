@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Backend.Middlewares;
 using Backend.Models;
 using Backend.Services;
@@ -22,7 +23,7 @@ public class CategoryController : ControllerBase
     public async Task<IActionResult> GetCategories()
     {
         var categories = await _categoryService.GetCategories();
-        return Ok(categories);
+        return Ok(JsonSerializer.Serialize(categories));
     }
 
     [HttpPost]
@@ -32,11 +33,11 @@ public class CategoryController : ControllerBase
         var result = await _categoryService.AddCategory(model);
         if (result == "SUCCESS")
         {
-            return Ok(new { message = "Category added successfully" });
+            return Ok(JsonSerializer.Serialize(new { Message = "Category added successfully" }));
         }
         else
         {
-            return BadRequest(new { message = "Something went wrong" });
+            return BadRequest(JsonSerializer.Serialize(new { Message = "Something went wrong" }));
         }
     }
 
@@ -48,15 +49,15 @@ public class CategoryController : ControllerBase
         Console.WriteLine(result);
         if (result == "SUCCESS")
         {
-            return Ok(new { message = "Category updated successfully" });
+            return Ok(JsonSerializer.Serialize(new { Message = "Category updated successfully" }));
         }
         else if (result == "NOTFOUND")
         {
-            return NotFound(new { message = "Category not found" });
+            return NotFound(JsonSerializer.Serialize(new { Message = "Category not found" }));
         }
         else
         {
-            return BadRequest(new { message = "Something went wrong" });
+            return BadRequest(JsonSerializer.Serialize(new { Message = "Something went wrong" }));
         }
     }
 
@@ -67,15 +68,15 @@ public class CategoryController : ControllerBase
         var result = await _categoryService.DeleteCategory(id);
         if (result == "SUCCESS")
         {
-            return Ok(new { message = "Category deleted successfully" });
+            return Ok(JsonSerializer.Serialize(new { Message = "Category deleted successfully" }));
         }
         else if (result == "NOTFOUND")
         {
-            return NotFound(new { message = "Category not found" });
+            return NotFound(JsonSerializer.Serialize(new { Message = "Category not found" }));
         }
         else
         {
-            return BadRequest(new { message = "Something went wrong" });
+            return BadRequest(JsonSerializer.Serialize(new { Message = "Something went wrong" }));
         }
     }
 }
