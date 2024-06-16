@@ -308,17 +308,14 @@ public class ProductService : IProductService
 
             CategoryDto? categoryDto = null;
 
-            if (category != null)
+            categoryDto = category != null ? new CategoryDto
             {
-                categoryDto = new CategoryDto
-                {
-                    Id = category.Id.ToString(),
-                    Name = category.Name,
-                    Icon = category.Icon,
-                    Description = category.Description,
-                    CreatedAt = category.CreatedAt
-                };
-            }
+                Id = category.Id.ToString(),
+                Name = category.Name,
+                Icon = category.Icon,
+                Description = category.Description,
+                CreatedAt = category.CreatedAt
+            } : null;
 
             List<TagDto>? tagsDto = null;
 
@@ -361,6 +358,30 @@ public class ProductService : IProductService
 
     public async Task<(string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model)
     {
+        async static Task<string> makeBase64(IFormFile image)
+        {
+            var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !extension.Equals(".jpg") && !extension.Equals(".png") && !extension.Equals(".jpeg") && !extension.Equals(".webp"))
+            {
+                throw new Exception("Invalid image format");
+            }
+
+            string mimeType = extension switch
+            {
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => throw new Exception("Invalid image format")
+            };
+
+            using var ms = new MemoryStream();
+            await image.CopyToAsync(ms);
+            var imageBytes = ms.ToArray();
+
+            return $"data:{mimeType};base64,{Convert.ToBase64String(imageBytes)}";
+        }
+
         try
         {
             var product = await _context.Products
@@ -370,23 +391,72 @@ public class ProductService : IProductService
 
             if (product == null)
             {
-                return (status: "NOTFOUND", dto: null);
+                return ("NOTFOUND", null);
             }
 
-            Category? category = null;
+            if (model.Name != null)
+            {
+                product.Name = model.Name;
+            }
+
+            if (model.Title != null)
+            {
+                product.Title = model.Title;
+            }
+
+            if (model.Description != null)
+            {
+                product.Description = model.Description;
+            }
+
+            if (model.Image0 != null)
+            {
+                product.Images[0] = await makeBase64(model.Image0);
+            }
+
+            if (model.Image1 != null)
+            {
+                product.Images[1] = await makeBase64(model.Image1);
+            }
+
+            if (model.Image2 != null)
+            {
+                product.Images[2] = await makeBase64(model.Image2);
+            }
+
+            if (model.Image3 != null)
+            {
+                product.Images[3] = await makeBase64(model.Image3);
+            }
+
+            if (model.Image4 != null)
+            {
+                product.Images[4] = await makeBase64(model.Image4);
+            }
+
+            if (model.Image5 != null)
+            {
+                product.Images[5] = await makeBase64(model.Image5);
+            }
+
+            if (model.Price != null)
+            {
+                product.Price = (float)model.Price;
+            }
 
             if (model.CategoryId != null)
             {
-                category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.CategoryId));
-
+                var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.CategoryId));
                 if (category == null)
-                    return (status: "NOTFOUND", dto: null);
+                {
+                    return ("CATEGORYNOTFOUND", null);
+                }
+                product.Category = category;
             }
-
-            List<long> tagsId = [];
 
             if (model.Tags != null)
             {
+                List<long> tagsId = [];
                 foreach (var tag in model.Tags)
                 {
                     var tagEntity = await _context.Tags.FirstOrDefaultAsync(t => t.Name == tag);
@@ -408,58 +478,12 @@ public class ProductService : IProductService
                         tagsId.Add(tagEntity.Id);
                     }
                 }
+                product.Tags = await _context.Tags.Where(t => tagsId.Contains(t.Id)).ToListAsync();
             }
-
-            var images = new List<IFormFile?>
-            {
-                model.Image0,
-                model.Image1,
-                model.Image2,
-                model.Image3,
-                model.Image4,
-                model.Image5
-            };
-
-            var imagesBase64 = new List<string>();
-
-            foreach (var image in images)
-            {
-                if (image == null)
-                    continue;
-                var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
-                if (string.IsNullOrEmpty(extension) || !extension.Equals(".jpg") && !extension.Equals(".png") && !extension.Equals(".jpeg") && !extension.Equals(".webp"))
-                {
-                    throw new Exception("Invalid image format");
-                }
-
-                string mimeType = extension switch
-                {
-                    ".jpg" => "image/jpeg",
-                    ".jpeg" => "image/jpeg",
-                    ".png" => "image/png",
-                    ".webp" => "image/webp",
-                    _ => throw new Exception("Invalid image format")
-                };
-
-                using var ms = new MemoryStream();
-                await image.CopyToAsync(ms);
-                var imageBytes = ms.ToArray();
-
-                var base64 = $"data:{mimeType};base64,{Convert.ToBase64String(imageBytes)}";
-                imagesBase64.Add(base64);
-            }
-
-            product.Name = model.Name;
-            product.Title = model.Title;
-            product.Description = model.Description;
-            product.Price = model.Price;
-            product.Images = imagesBase64;
-            product.Category = category;
-            product.Tags = await _context.Tags.Where(t => tagsId.Contains(t.Id)).ToListAsync();
 
             await _context.SaveChangesAsync();
 
-            return (status: "SUCCESS", dto: new ProductDto
+            return ("SUCCESS", new ProductDto
             {
                 Id = product.Id.ToString(),
                 Name = product.Name,
@@ -468,26 +492,26 @@ public class ProductService : IProductService
                 Price = product.Price,
                 Images = product.Images,
                 CreatedAt = product.CreatedAt,
-                Category = new CategoryDto
+                Category = product.Category != null ? new CategoryDto
                 {
-                    Id = category.Id.ToString(),
-                    Name = category.Name,
-                    Description = category.Description,
-                    CreatedAt = category.CreatedAt,
-                    Icon = category.Icon,
-                },
-                Tags = product.Tags.Select(t => new TagDto
+                    Id = product.Category.Id.ToString(),
+                    Name = product.Category.Name,
+                    Description = product.Category.Description,
+                    CreatedAt = product.Category.CreatedAt,
+                    Icon = product.Category.Icon,
+                } : null,
+                Tags = product.Tags != null ? product.Tags.Select(t => new TagDto
                 {
                     Id = t.Id.ToString(),
                     Name = t.Name,
                     Description = t.Description,
-                    CreatedAt = t.CreatedAt
-                }).ToList()
+                    CreatedAt = t.CreatedAt,
+                }).ToList() : null
             });
         }
         catch
         {
-            return (status: "INTERNAL", dto: null);
+            return ("ERROR", null);
         }
     }
 }
