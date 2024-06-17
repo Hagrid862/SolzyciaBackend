@@ -21,6 +21,7 @@ public class ProductService : IProductService
     {
         try
         {
+            Console.WriteLine("Tags: " + model.Tags);
             if (userId == null)
                 return "ERROR";
 
@@ -36,12 +37,17 @@ public class ProductService : IProductService
                     return "NOTFOUND";
             }
 
-            List<long> tagsId = [];
+            List<long> tagsId = new List<long>();
 
             if (model.Tags != null)
             {
-                foreach (var tag in model.Tags)
+                var tagsList = model.Tags.Split(",").ToList();
+
+                Console.WriteLine("Tags List: " + tagsList.Count());
+
+                foreach (var tag in tagsList)
                 {
+                    Console.WriteLine("Tag: " + tag);
                     var tagEntity = await _context.Tags.FirstOrDefaultAsync(t => t.Name == tag);
                     if (tagEntity == null)
                     {
@@ -317,7 +323,7 @@ public class ProductService : IProductService
                 CreatedAt = category.CreatedAt
             } : null;
 
-            List<TagDto>? tagsDto = null;
+            List<TagDto> tagsDto = new List<TagDto>();
 
             if (tags.Count > 0)
             {
@@ -330,7 +336,7 @@ public class ProductService : IProductService
                         Description = tag.Description,
                         CreatedAt = tag.CreatedAt
                     };
-                    tagsDto?.Add(tagDto);
+                    tagsDto.Add(tagDto);
                 }
             }
 
@@ -344,8 +350,10 @@ public class ProductService : IProductService
                 Images = product.Images,
                 CreatedAt = product.CreatedAt,
                 Category = categoryDto ?? null,
-                Tags = tagsDto
+                Tags = tagsDto.Count > 0 ? tagsDto : null
             };
+
+            Console.WriteLine("tags: " + productDto.Tags?.Count);
 
             return productDto;
         }

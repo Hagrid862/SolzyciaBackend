@@ -13,5 +13,5 @@ public class AddProductModel
     public IFormFile? Image5 { get; set; }
     public required float Price { get; set; }
     public string? CategoryId { get; set; }
-    public List<string>? Tags { get; set; }
+    public string? Tags { get; set; }
 }
