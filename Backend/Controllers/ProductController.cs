@@ -135,13 +135,14 @@ public class ProductController : ControllerBase
 
     [HttpPut("{productId}")]
     [AuthenticateAdminTokenMiddleware]
-    public async Task<IActionResult> UpdateProduct(string productId, [FromForm] UpdateProductModel model)
+    public async Task<IActionResult> UpdateProduct([FromRoute] string productId, [FromForm] UpdateProductModel model)
     {
         long? userId = HttpContext.Items["userId"] as long?;
-        if (userId == null)
+        if (userId == null || userId == -1)
         {
             return BadRequest(JsonSerializer.Serialize(new { Message = "User ID not found in the request" }));
         }
+        Console.WriteLine("User ID: " + userId);
         var result = await _productService.UpdateProduct(productId, model);
         if (result.status == "SUCCESS")
         {

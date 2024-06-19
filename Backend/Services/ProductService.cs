@@ -392,10 +392,11 @@ public class ProductService : IProductService
 
         try
         {
+            long id = long.Parse(productId);
             var product = await _context.Products
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
-                .FirstOrDefaultAsync(x => x.Id == long.Parse(productId));
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (product == null)
             {
@@ -454,7 +455,8 @@ public class ProductService : IProductService
 
             if (model.CategoryId != null)
             {
-                var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.CategoryId));
+                var categoryId = long.Parse(model.CategoryId);
+                var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
                 if (category == null)
                 {
                     return ("CATEGORYNOTFOUND", null);
