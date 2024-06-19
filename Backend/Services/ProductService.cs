@@ -417,7 +417,7 @@ public class ProductService : IProductService
             {
                 product.Description = model.Description;
             }
-            
+
             // Console.WriteLine(model.ImagesState);
 
             // if (model.ImagesState != "k,k,k,k,k,k") {
@@ -520,60 +520,87 @@ public class ProductService : IProductService
             //     }
             // }
 
-            if (model.Image0 != null) {
-                if (product.Images != null) {
+            if (model.Image0 != null)
+            {
+                if (product.Images != null)
+                {
                     product.Images.Add(await makeBase64(model.Image0));
-                } else {
+                }
+                else
+                {
                     product.Images = new List<string?> { await makeBase64(model.Image0) };
                 }
             }
 
-            if (model.Image1 != null) {
-                if (product.Images != null) {
+            if (model.Image1 != null)
+            {
+                if (product.Images != null)
+                {
                     product.Images.Add(await makeBase64(model.Image1));
-                } else {
+                }
+                else
+                {
                     product.Images = new List<string?> { await makeBase64(model.Image1) };
                 }
             }
 
-            if (model.Image2 != null) {
-                if (product.Images != null) {
+            if (model.Image2 != null)
+            {
+                if (product.Images != null)
+                {
                     product.Images.Add(await makeBase64(model.Image2));
-                } else {
+                }
+                else
+                {
                     product.Images = new List<string?> { await makeBase64(model.Image2) };
                 }
             }
 
-            if (model.Image3 != null) {
-                if (product.Images != null) {
+            if (model.Image3 != null)
+            {
+                if (product.Images != null)
+                {
                     product.Images.Add(await makeBase64(model.Image3));
-                } else {
+                }
+                else
+                {
                     product.Images = new List<string?> { await makeBase64(model.Image3) };
                 }
             }
 
-            if (model.Image4 != null) {
-                if (product.Images != null) {
+            if (model.Image4 != null)
+            {
+                if (product.Images != null)
+                {
                     product.Images.Add(await makeBase64(model.Image4));
-                } else {
+                }
+                else
+                {
                     product.Images = new List<string?> { await makeBase64(model.Image4) };
                 }
             }
 
-            if (model.Image5 != null) {
-                if (product.Images != null) {
+            if (model.Image5 != null)
+            {
+                if (product.Images != null)
+                {
                     product.Images.Add(await makeBase64(model.Image5));
-                } else {
+                }
+                else
+                {
                     product.Images = new List<string?> { await makeBase64(model.Image5) };
                 }
             }
 
-            if (model.RemovedImages != null) {
+            if (model.RemovedImages != null)
+            {
                 var removedImages = model.RemovedImages.Split(",");
                 var imagesList = product.Images?.ToList();
-                foreach (var image in removedImages) {
+                foreach (var image in removedImages)
+                {
                     int index = int.Parse(image);
-                    if (index < imagesList?.Count) {
+                    if (index < imagesList?.Count)
+                    {
                         imagesList.RemoveAt(index);
                     }
                 }
