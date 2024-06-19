@@ -417,35 +417,167 @@ public class ProductService : IProductService
             {
                 product.Description = model.Description;
             }
+            
+            // Console.WriteLine(model.ImagesState);
 
-            if (model.Image0 != null)
-            {
-                product.Images[0] = await makeBase64(model.Image0);
+            // if (model.ImagesState != "k,k,k,k,k,k") {
+            //     var state = model.ImagesState.Split(",");
+
+            //     for (int i = 0; i < state.Length; i++)
+            //     {
+            //         if (state[i] == "r") {
+            //             if (product.Images != null)
+            //             {
+            //                 product.Images[i] = null;
+            //             }
+            //         } else if (state[i] == "c") {
+            //             if (i == 0 && model.Image0 != null) {
+            //                 if (product.Images != null) {
+            //                     product.Images[i] = await makeBase64(model.Image0);
+            //                 } else {
+            //                     product.Images = new List<string?> { await makeBase64(model.Image0) };
+            //                 }
+            //             } else if (i == 1 && model.Image1 != null) {
+            //                 if (product.Images != null) {
+            //                     product.Images[i] = await makeBase64(model.Image1);
+            //                 } else {
+            //                     product.Images = new List<string?> { null, await makeBase64(model.Image1) };
+            //                 }
+            //             } else if (i == 2 && model.Image2 != null) {
+            //                 if (product.Images != null) {
+            //                     product.Images[i] = await makeBase64(model.Image2);
+            //                 } else {
+            //                     product.Images = new List<string?> { null, null, await makeBase64(model.Image2) };
+            //                 }
+            //             } else if (i == 3 && model.Image3 != null) {
+            //                 if (product.Images != null) {
+            //                     product.Images[i] = await makeBase64(model.Image3);
+            //                 } else {
+            //                     product.Images = new List<string?> { null, null, null, await makeBase64(model.Image3) };
+            //                 }
+            //             } else if (i == 4 && model.Image4 != null) {
+            //                 if (product.Images != null) {
+            //                     product.Images[i] = await makeBase64(model.Image4);
+            //                 } else {
+            //                     product.Images = new List<string?> { null, null, null, null, await makeBase64(model.Image4) };
+            //                 }
+            //             } else if (i == 5 && model.Image5 != null) {
+            //                 if (product.Images != null) {
+            //                     product.Images[i] = await makeBase64(model.Image5);
+            //                 } else {
+            //                     product.Images = new List<string?> { null, null, null, null, null, await makeBase64(model.Image5) };
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+
+            // if (model.Image0 != null) {
+            //     if (product.Images != null) {
+            //         product.Images[0] = await makeBase64(model.Image0);
+            //     } else {
+            //         product.Images = new List<string?> { await makeBase64(model.Image0) };
+            //     }
+            // }
+
+            // if (model.Image1 != null) {
+            //     if (product.Images != null) {
+            //         product.Images[1] = await makeBase64(model.Image1);
+            //     } else {
+            //         product.Images = new List<string?> { await makeBase64(model.Image1) };
+            //     }
+            // }
+
+            // if (model.Image2 != null) {
+            //     if (product.Images != null) {
+            //         product.Images[2] = await makeBase64(model.Image2);
+            //     } else {
+            //         product.Images = new List<string?> { await makeBase64(model.Image2) };
+            //     }
+            // }
+
+            // if (model.Image3 != null) {
+            //     if (product.Images != null) {
+            //         product.Images[3] = await makeBase64(model.Image3);
+            //     } else {
+            //         product.Images = new List<string?> { await makeBase64(model.Image3) };
+            //     }
+            // }
+
+            // if (model.Image4 != null) {
+            //     if (product.Images != null) {
+            //         product.Images[4] = await makeBase64(model.Image4);
+            //     } else {
+            //         product.Images = new List<string?> { await makeBase64(model.Image4) };
+            //     }
+            // }
+
+            // if (model.Image5 != null) {
+            //     if (product.Images != null) {
+            //         product.Images[5] = await makeBase64(model.Image5);
+            //     } else {
+            //         product.Images = new List<string?> { await makeBase64(model.Image5) };
+            //     }
+            // }
+
+            if (model.Image0 != null) {
+                if (product.Images != null) {
+                    product.Images.Add(await makeBase64(model.Image0));
+                } else {
+                    product.Images = new List<string?> { await makeBase64(model.Image0) };
+                }
             }
 
-            if (model.Image1 != null)
-            {
-                product.Images[1] = await makeBase64(model.Image1);
+            if (model.Image1 != null) {
+                if (product.Images != null) {
+                    product.Images.Add(await makeBase64(model.Image1));
+                } else {
+                    product.Images = new List<string?> { await makeBase64(model.Image1) };
+                }
             }
 
-            if (model.Image2 != null)
-            {
-                product.Images[2] = await makeBase64(model.Image2);
+            if (model.Image2 != null) {
+                if (product.Images != null) {
+                    product.Images.Add(await makeBase64(model.Image2));
+                } else {
+                    product.Images = new List<string?> { await makeBase64(model.Image2) };
+                }
             }
 
-            if (model.Image3 != null)
-            {
-                product.Images[3] = await makeBase64(model.Image3);
+            if (model.Image3 != null) {
+                if (product.Images != null) {
+                    product.Images.Add(await makeBase64(model.Image3));
+                } else {
+                    product.Images = new List<string?> { await makeBase64(model.Image3) };
+                }
             }
 
-            if (model.Image4 != null)
-            {
-                product.Images[4] = await makeBase64(model.Image4);
+            if (model.Image4 != null) {
+                if (product.Images != null) {
+                    product.Images.Add(await makeBase64(model.Image4));
+                } else {
+                    product.Images = new List<string?> { await makeBase64(model.Image4) };
+                }
             }
 
-            if (model.Image5 != null)
-            {
-                product.Images[5] = await makeBase64(model.Image5);
+            if (model.Image5 != null) {
+                if (product.Images != null) {
+                    product.Images.Add(await makeBase64(model.Image5));
+                } else {
+                    product.Images = new List<string?> { await makeBase64(model.Image5) };
+                }
+            }
+
+            if (model.RemovedImages != null) {
+                var removedImages = model.RemovedImages.Split(",");
+                var imagesList = product.Images?.ToList();
+                foreach (var image in removedImages) {
+                    int index = int.Parse(image);
+                    if (index < imagesList?.Count) {
+                        imagesList.RemoveAt(index);
+                    }
+                }
+                product.Images = imagesList?.ToList();
             }
 
             if (model.Price != null)
@@ -519,8 +651,9 @@ public class ProductService : IProductService
                 }).ToList() : null
             });
         }
-        catch
+        catch (Exception e)
         {
+            Console.WriteLine(e);
             return ("ERROR", null);
         }
     }

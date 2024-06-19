@@ -14,4 +14,5 @@ public class UpdateProductModel
     public float? Price { get; set; }
     public string? CategoryId { get; set; }
     public List<string>? Tags { get; set; }
+    public string? RemovedImages { get; set; }
 }
