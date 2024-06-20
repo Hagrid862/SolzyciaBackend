@@ -19,7 +19,6 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet]
-    [AuthenticateAdminTokenMiddleware]
     public async Task<IActionResult> GetCategories()
     {
         var categories = await _categoryService.GetCategories();
