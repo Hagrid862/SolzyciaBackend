@@ -24,6 +24,7 @@ public class EventService : IEventService
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
                 .Include(x => x.Dates)
+                .Include(x => x.Images)
                 .Skip((page - 1) * limit)
                 .Take(limit)
                 .ToListAsync();
@@ -121,6 +122,7 @@ public class EventService : IEventService
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
                 .Include(x => x.Dates)
+                .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == long.Parse(eventId));
 
             if (@event == null)
@@ -205,6 +207,7 @@ public class EventService : IEventService
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
                 .Include(x => x.Dates)
+                .Include(x => x.Images)
                 .Where(x => x.Category.Id == long.Parse(categoryId))
                 .Skip((page - 1) * limit)
                 .Take(limit);

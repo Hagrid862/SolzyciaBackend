@@ -147,7 +147,11 @@ public class ProductService : IProductService
     {
         try
         {
-            var products = await _context.Products.Include(p => p.Category).Include(p => p.Tags).ToListAsync();
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Tags)
+                .Include(p => p.Images)
+                .ToListAsync();
             var productsDto = new List<ProductDto>();
 
             foreach (var product in products)
@@ -229,7 +233,12 @@ public class ProductService : IProductService
         try
         {
             var categoryId = long.Parse(category);
-            var products = await _context.Products.Include(p => p.Category).Include(p => p.Tags).Where(p => p.Category.Id == categoryId).ToListAsync();
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Tags)
+                .Include(p => p.Images)
+                .Where(p => p.Category.Id == categoryId)
+                .ToListAsync();
             var productsDto = new List<ProductDto>();
 
             foreach (var product in products)
@@ -313,6 +322,7 @@ public class ProductService : IProductService
             var product = await _context.Products
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
+                .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == long.Parse(productId));
 
             if (product == null)
