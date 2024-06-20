@@ -107,6 +107,17 @@ public class ProductService : IProductService
                 imagesBase64.Add(base64);
             }
 
+            var imagesList = new List<Image>();
+
+            foreach (var image in imagesBase64)
+            {
+                imagesList.Add(new Image
+                {
+                    Id = Snowflake.GenerateId(),
+                    Base64 = image
+                });
+            }
+
             var newProduct = new Product
             {
                 Id = Snowflake.GenerateId(),
@@ -114,7 +125,7 @@ public class ProductService : IProductService
                 Title = model.Title,
                 Description = model.Description,
                 Price = model.Price,
-                Images = imagesBase64,
+                Images = imagesList,
                 CreatedAt = DateTime.UtcNow,
                 Category = category,
                 Tags = await _context.Tags.Where(t => tagsId.Contains(t.Id)).ToListAsync(),
@@ -418,117 +429,23 @@ public class ProductService : IProductService
                 product.Description = model.Description;
             }
 
-            // Console.WriteLine(model.ImagesState);
-
-            // if (model.ImagesState != "k,k,k,k,k,k") {
-            //     var state = model.ImagesState.Split(",");
-
-            //     for (int i = 0; i < state.Length; i++)
-            //     {
-            //         if (state[i] == "r") {
-            //             if (product.Images != null)
-            //             {
-            //                 product.Images[i] = null;
-            //             }
-            //         } else if (state[i] == "c") {
-            //             if (i == 0 && model.Image0 != null) {
-            //                 if (product.Images != null) {
-            //                     product.Images[i] = await makeBase64(model.Image0);
-            //                 } else {
-            //                     product.Images = new List<string?> { await makeBase64(model.Image0) };
-            //                 }
-            //             } else if (i == 1 && model.Image1 != null) {
-            //                 if (product.Images != null) {
-            //                     product.Images[i] = await makeBase64(model.Image1);
-            //                 } else {
-            //                     product.Images = new List<string?> { null, await makeBase64(model.Image1) };
-            //                 }
-            //             } else if (i == 2 && model.Image2 != null) {
-            //                 if (product.Images != null) {
-            //                     product.Images[i] = await makeBase64(model.Image2);
-            //                 } else {
-            //                     product.Images = new List<string?> { null, null, await makeBase64(model.Image2) };
-            //                 }
-            //             } else if (i == 3 && model.Image3 != null) {
-            //                 if (product.Images != null) {
-            //                     product.Images[i] = await makeBase64(model.Image3);
-            //                 } else {
-            //                     product.Images = new List<string?> { null, null, null, await makeBase64(model.Image3) };
-            //                 }
-            //             } else if (i == 4 && model.Image4 != null) {
-            //                 if (product.Images != null) {
-            //                     product.Images[i] = await makeBase64(model.Image4);
-            //                 } else {
-            //                     product.Images = new List<string?> { null, null, null, null, await makeBase64(model.Image4) };
-            //                 }
-            //             } else if (i == 5 && model.Image5 != null) {
-            //                 if (product.Images != null) {
-            //                     product.Images[i] = await makeBase64(model.Image5);
-            //                 } else {
-            //                     product.Images = new List<string?> { null, null, null, null, null, await makeBase64(model.Image5) };
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
-
-            // if (model.Image0 != null) {
-            //     if (product.Images != null) {
-            //         product.Images[0] = await makeBase64(model.Image0);
-            //     } else {
-            //         product.Images = new List<string?> { await makeBase64(model.Image0) };
-            //     }
-            // }
-
-            // if (model.Image1 != null) {
-            //     if (product.Images != null) {
-            //         product.Images[1] = await makeBase64(model.Image1);
-            //     } else {
-            //         product.Images = new List<string?> { await makeBase64(model.Image1) };
-            //     }
-            // }
-
-            // if (model.Image2 != null) {
-            //     if (product.Images != null) {
-            //         product.Images[2] = await makeBase64(model.Image2);
-            //     } else {
-            //         product.Images = new List<string?> { await makeBase64(model.Image2) };
-            //     }
-            // }
-
-            // if (model.Image3 != null) {
-            //     if (product.Images != null) {
-            //         product.Images[3] = await makeBase64(model.Image3);
-            //     } else {
-            //         product.Images = new List<string?> { await makeBase64(model.Image3) };
-            //     }
-            // }
-
-            // if (model.Image4 != null) {
-            //     if (product.Images != null) {
-            //         product.Images[4] = await makeBase64(model.Image4);
-            //     } else {
-            //         product.Images = new List<string?> { await makeBase64(model.Image4) };
-            //     }
-            // }
-
-            // if (model.Image5 != null) {
-            //     if (product.Images != null) {
-            //         product.Images[5] = await makeBase64(model.Image5);
-            //     } else {
-            //         product.Images = new List<string?> { await makeBase64(model.Image5) };
-            //     }
-            // }
-
             if (model.Image0 != null)
             {
                 if (product.Images != null)
                 {
-                    product.Images.Add(await makeBase64(model.Image0));
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image0)
+                    });
                 }
                 else
                 {
-                    product.Images = new List<string?> { await makeBase64(model.Image0) };
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image0)
+                    }};
                 }
             }
 
@@ -536,11 +453,19 @@ public class ProductService : IProductService
             {
                 if (product.Images != null)
                 {
-                    product.Images.Add(await makeBase64(model.Image1));
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image1)
+                    });
                 }
                 else
                 {
-                    product.Images = new List<string?> { await makeBase64(model.Image1) };
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image1)
+                    }};
                 }
             }
 
@@ -548,11 +473,19 @@ public class ProductService : IProductService
             {
                 if (product.Images != null)
                 {
-                    product.Images.Add(await makeBase64(model.Image2));
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image2)
+                    });
                 }
                 else
                 {
-                    product.Images = new List<string?> { await makeBase64(model.Image2) };
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image2)
+                    }};
                 }
             }
 
@@ -560,11 +493,19 @@ public class ProductService : IProductService
             {
                 if (product.Images != null)
                 {
-                    product.Images.Add(await makeBase64(model.Image3));
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image3)
+                    });
                 }
                 else
                 {
-                    product.Images = new List<string?> { await makeBase64(model.Image3) };
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image3)
+                    }};
                 }
             }
 
@@ -572,11 +513,19 @@ public class ProductService : IProductService
             {
                 if (product.Images != null)
                 {
-                    product.Images.Add(await makeBase64(model.Image4));
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image4)
+                    });
                 }
                 else
                 {
-                    product.Images = new List<string?> { await makeBase64(model.Image4) };
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image4)
+                    }};
                 }
             }
 
@@ -584,27 +533,20 @@ public class ProductService : IProductService
             {
                 if (product.Images != null)
                 {
-                    product.Images.Add(await makeBase64(model.Image5));
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image5)
+                    });
                 }
                 else
                 {
-                    product.Images = new List<string?> { await makeBase64(model.Image5) };
-                }
-            }
-
-            if (model.RemovedImages != null)
-            {
-                var removedImages = model.RemovedImages.Split(",");
-                var imagesList = product.Images?.ToList();
-                foreach (var image in removedImages)
-                {
-                    int index = int.Parse(image);
-                    if (index < imagesList?.Count)
+                    product.Images = new List<Image> { new Image()
                     {
-                        imagesList.RemoveAt(index);
-                    }
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image5)
+                    }};
                 }
-                product.Images = imagesList?.ToList();
             }
 
             if (model.Price != null)

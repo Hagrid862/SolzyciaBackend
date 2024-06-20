@@ -6,7 +6,7 @@ public class Product
     public required string Name { get; set; }
     public string? Title { get; set; }
     public required string Description { get; set; }
-    public List<string?>? Images { get; set; }
+    public List<Image>? Images { get; set; }
     public required float Price { get; set; }
     public required DateTime CreatedAt { get; set; }
     public Category? Category { get; set; }
