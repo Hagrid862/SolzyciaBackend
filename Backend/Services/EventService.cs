@@ -24,6 +24,7 @@ public class EventService : IEventService
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
                 .Include(x => x.Dates)
+                .Include(x => x.Images)
                 .Skip((page - 1) * limit)
                 .Take(limit)
                 .ToListAsync();
@@ -47,11 +48,7 @@ public class EventService : IEventService
                 List<Tag> tags = @event.Tags ?? new();
                 List<Review> reviewsList = @event.Reviews ?? new();
 
-                Console.WriteLine(1);
-
                 CategoryDto? categoryDto = null;
-
-                Console.WriteLine(2);
 
                 if (category != null)
                 {
@@ -65,8 +62,6 @@ public class EventService : IEventService
                     };
                 }
 
-                Console.WriteLine(3);
-
                 List<EventDateDto> datesDto = new List<EventDateDto>();
 
                 foreach (var date in dates)
@@ -79,8 +74,6 @@ public class EventService : IEventService
                     };
                     datesDto.Add(dateDto);
                 }
-
-                Console.WriteLine(4);
 
                 List<TagDto>? tagsDto = null;
 
@@ -96,8 +89,6 @@ public class EventService : IEventService
                     tagsDto.Add(tagDto);
                 }
 
-                Console.WriteLine(5);
-
                 var eventDto = new EventDto
                 {
                     Id = @event.Id.ToString(),
@@ -112,8 +103,6 @@ public class EventService : IEventService
                     CreatedAt = @event.CreatedAt
                 };
                 eventsDto.Add(eventDto);
-
-                Console.WriteLine(6);
             }
             return eventsDto;
         }
@@ -133,6 +122,7 @@ public class EventService : IEventService
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
                 .Include(x => x.Dates)
+                .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == long.Parse(eventId));
 
             if (@event == null)
@@ -217,6 +207,7 @@ public class EventService : IEventService
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
                 .Include(x => x.Dates)
+                .Include(x => x.Images)
                 .Where(x => x.Category.Id == long.Parse(categoryId))
                 .Skip((page - 1) * limit)
                 .Take(limit);
@@ -419,6 +410,12 @@ public class EventService : IEventService
                 category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == long.Parse(model.CategoryId));
             }
 
+            var imagesList = imagesBase64.Select(i => new Image
+            {
+                Id = Snowflake.GenerateId(),
+                Base64 = i
+            }).ToList();
+
             var @event = new Event
             {
                 Id = Snowflake.GenerateId(),
@@ -426,7 +423,7 @@ public class EventService : IEventService
                 Description = model.Description,
                 Time = model.Time,
                 Price = model.Price,
-                Images = imagesBase64,
+                Images = imagesList,
                 Category = category,
                 Tags = tags,
                 Dates = dates,

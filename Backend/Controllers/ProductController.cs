@@ -112,7 +112,7 @@ public class ProductController : ControllerBase
         }
         else
         {
-            return Ok(JsonSerializer.Serialize(new { products = products}));
+            return Ok(JsonSerializer.Serialize(new { products = products }));
         }
     }
 
@@ -129,7 +129,32 @@ public class ProductController : ControllerBase
         }
         else
         {
-            return Ok(JsonSerializer.Serialize(new { products = product }));
+            return Ok(JsonSerializer.Serialize(new { product = product }));
+        }
+    }
+
+    [HttpPut("{productId}")]
+    [AuthenticateAdminTokenMiddleware]
+    public async Task<IActionResult> UpdateProduct([FromRoute] string productId, [FromForm] UpdateProductModel model)
+    {
+        long? userId = HttpContext.Items["userId"] as long?;
+        if (userId == null || userId == -1)
+        {
+            return BadRequest(JsonSerializer.Serialize(new { Message = "User ID not found in the request" }));
+        }
+        Console.WriteLine("User ID: " + userId);
+        var result = await _productService.UpdateProduct(productId, model);
+        if (result.status == "SUCCESS")
+        {
+            return Ok(JsonSerializer.Serialize(new { Message = "Product updated successfully", Product = result.dto }));
+        }
+        else if (result.status == "NOTFOUND")
+        {
+            return NotFound(JsonSerializer.Serialize(new { Message = "Product not found" }));
+        }
+        else
+        {
+            return BadRequest(JsonSerializer.Serialize(new { Message = "Something went wrong" }));
         }
     }
 }

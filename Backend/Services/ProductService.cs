@@ -21,6 +21,7 @@ public class ProductService : IProductService
     {
         try
         {
+            Console.WriteLine("Tags: " + model.Tags);
             if (userId == null)
                 return "ERROR";
 
@@ -36,12 +37,17 @@ public class ProductService : IProductService
                     return "NOTFOUND";
             }
 
-            List<long> tagsId = [];
+            List<long> tagsId = new List<long>();
 
             if (model.Tags != null)
             {
-                foreach (var tag in model.Tags)
+                var tagsList = model.Tags.Split(",").ToList();
+
+                Console.WriteLine("Tags List: " + tagsList.Count());
+
+                foreach (var tag in tagsList)
                 {
+                    Console.WriteLine("Tag: " + tag);
                     var tagEntity = await _context.Tags.FirstOrDefaultAsync(t => t.Name == tag);
                     if (tagEntity == null)
                     {
@@ -101,6 +107,17 @@ public class ProductService : IProductService
                 imagesBase64.Add(base64);
             }
 
+            var imagesList = new List<Image>();
+
+            foreach (var image in imagesBase64)
+            {
+                imagesList.Add(new Image
+                {
+                    Id = Snowflake.GenerateId(),
+                    Base64 = image
+                });
+            }
+
             var newProduct = new Product
             {
                 Id = Snowflake.GenerateId(),
@@ -108,7 +125,7 @@ public class ProductService : IProductService
                 Title = model.Title,
                 Description = model.Description,
                 Price = model.Price,
-                Images = imagesBase64,
+                Images = imagesList,
                 CreatedAt = DateTime.UtcNow,
                 Category = category,
                 Tags = await _context.Tags.Where(t => tagsId.Contains(t.Id)).ToListAsync(),
@@ -130,7 +147,11 @@ public class ProductService : IProductService
     {
         try
         {
-            var products = await _context.Products.Include(p => p.Category).Include(p => p.Tags).ToListAsync();
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Tags)
+                .Include(p => p.Images)
+                .ToListAsync();
             var productsDto = new List<ProductDto>();
 
             foreach (var product in products)
@@ -212,7 +233,12 @@ public class ProductService : IProductService
         try
         {
             var categoryId = long.Parse(category);
-            var products = await _context.Products.Include(p => p.Category).Include(p => p.Tags).Where(p => p.Category.Id == categoryId).ToListAsync();
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Tags)
+                .Include(p => p.Images)
+                .Where(p => p.Category.Id == categoryId)
+                .ToListAsync();
             var productsDto = new List<ProductDto>();
 
             foreach (var product in products)
@@ -289,12 +315,14 @@ public class ProductService : IProductService
         }
     }
 
-    public async Task<ProductDto?> GetProductById(string productId) {
-        try 
+    public async Task<ProductDto?> GetProductById(string productId)
+    {
+        try
         {
             var product = await _context.Products
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
+                .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == long.Parse(productId));
 
             if (product == null)
@@ -307,30 +335,30 @@ public class ProductService : IProductService
 
             CategoryDto? categoryDto = null;
 
-            if (category != null)
+            categoryDto = category != null ? new CategoryDto
             {
-                categoryDto = new CategoryDto
-                {
-                    Id = category.Id.ToString(),
-                    Name = category.Name,
-                    Icon = category.Icon,
-                    Description = category.Description,
-                    CreatedAt = category.CreatedAt
-                };
-            }
+                Id = category.Id.ToString(),
+                Name = category.Name,
+                Icon = category.Icon,
+                Description = category.Description,
+                CreatedAt = category.CreatedAt
+            } : null;
 
-            List<TagDto>? tagsDto = null;
+            List<TagDto> tagsDto = new List<TagDto>();
 
-            foreach (var tag in tags)
+            if (tags.Count > 0)
             {
-                var tagDto = new TagDto
+                foreach (var tag in tags)
                 {
-                    Id = tag.Id.ToString(),
-                    Name = tag.Name,
-                    Description = tag.Description,
-                    CreatedAt = tag.CreatedAt
-                };
-                tagsDto.Add(tagDto);
+                    var tagDto = new TagDto
+                    {
+                        Id = tag.Id.ToString(),
+                        Name = tag.Name,
+                        Description = tag.Description,
+                        CreatedAt = tag.CreatedAt
+                    };
+                    tagsDto.Add(tagDto);
+                }
             }
 
             var productDto = new ProductDto
@@ -343,8 +371,10 @@ public class ProductService : IProductService
                 Images = product.Images,
                 CreatedAt = product.CreatedAt,
                 Category = categoryDto ?? null,
-                Tags = tagsDto
+                Tags = tagsDto.Count > 0 ? tagsDto : null
             };
+
+            Console.WriteLine("tags: " + productDto.Tags?.Count);
 
             return productDto;
         }
@@ -352,6 +382,258 @@ public class ProductService : IProductService
         {
             Console.WriteLine(e);
             return null;
+        }
+    }
+
+    public async Task<(string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model)
+    {
+        async static Task<string> makeBase64(IFormFile image)
+        {
+            var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !extension.Equals(".jpg") && !extension.Equals(".png") && !extension.Equals(".jpeg") && !extension.Equals(".webp"))
+            {
+                throw new Exception("Invalid image format");
+            }
+
+            string mimeType = extension switch
+            {
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => throw new Exception("Invalid image format")
+            };
+
+            using var ms = new MemoryStream();
+            await image.CopyToAsync(ms);
+            var imageBytes = ms.ToArray();
+
+            return $"data:{mimeType};base64,{Convert.ToBase64String(imageBytes)}";
+        }
+
+        try
+        {
+            long id = long.Parse(productId);
+            var product = await _context.Products
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (product == null)
+            {
+                return ("NOTFOUND", null);
+            }
+
+            if (model.Name != null)
+            {
+                product.Name = model.Name;
+            }
+
+            if (model.Title != null)
+            {
+                product.Title = model.Title;
+            }
+
+            if (model.Description != null)
+            {
+                product.Description = model.Description;
+            }
+
+            if (model.Image0 != null)
+            {
+                if (product.Images != null)
+                {
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image0)
+                    });
+                }
+                else
+                {
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image0)
+                    }};
+                }
+            }
+
+            if (model.Image1 != null)
+            {
+                if (product.Images != null)
+                {
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image1)
+                    });
+                }
+                else
+                {
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image1)
+                    }};
+                }
+            }
+
+            if (model.Image2 != null)
+            {
+                if (product.Images != null)
+                {
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image2)
+                    });
+                }
+                else
+                {
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image2)
+                    }};
+                }
+            }
+
+            if (model.Image3 != null)
+            {
+                if (product.Images != null)
+                {
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image3)
+                    });
+                }
+                else
+                {
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image3)
+                    }};
+                }
+            }
+
+            if (model.Image4 != null)
+            {
+                if (product.Images != null)
+                {
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image4)
+                    });
+                }
+                else
+                {
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image4)
+                    }};
+                }
+            }
+
+            if (model.Image5 != null)
+            {
+                if (product.Images != null)
+                {
+                    product.Images.Add(new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image5)
+                    });
+                }
+                else
+                {
+                    product.Images = new List<Image> { new Image()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Base64 = await makeBase64(model.Image5)
+                    }};
+                }
+            }
+
+            if (model.Price != null)
+            {
+                product.Price = (float)model.Price;
+            }
+
+            if (model.CategoryId != null)
+            {
+                var categoryId = long.Parse(model.CategoryId);
+                var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+                if (category == null)
+                {
+                    return ("CATEGORYNOTFOUND", null);
+                }
+                product.Category = category;
+            }
+
+            if (model.Tags != null)
+            {
+                List<long> tagsId = [];
+                foreach (var tag in model.Tags)
+                {
+                    var tagEntity = await _context.Tags.FirstOrDefaultAsync(t => t.Name == tag);
+                    if (tagEntity == null)
+                    {
+                        var newTag = new Tag
+                        {
+                            Id = Snowflake.GenerateId(),
+                            Name = tag,
+                            Description = "",
+                            CreatedAt = default
+                        };
+                        await _context.Tags.AddAsync(newTag);
+                        await _context.SaveChangesAsync();
+                        tagsId.Add(newTag.Id);
+                    }
+                    else
+                    {
+                        tagsId.Add(tagEntity.Id);
+                    }
+                }
+                product.Tags = await _context.Tags.Where(t => tagsId.Contains(t.Id)).ToListAsync();
+            }
+
+            await _context.SaveChangesAsync();
+
+            return ("SUCCESS", new ProductDto
+            {
+                Id = product.Id.ToString(),
+                Name = product.Name,
+                Title = product.Title,
+                Description = product.Description,
+                Price = product.Price,
+                Images = product.Images,
+                CreatedAt = product.CreatedAt,
+                Category = product.Category != null ? new CategoryDto
+                {
+                    Id = product.Category.Id.ToString(),
+                    Name = product.Category.Name,
+                    Description = product.Category.Description,
+                    CreatedAt = product.Category.CreatedAt,
+                    Icon = product.Category.Icon,
+                } : null,
+                Tags = product.Tags != null ? product.Tags.Select(t => new TagDto
+                {
+                    Id = t.Id.ToString(),
+                    Name = t.Name,
+                    Description = t.Description,
+                    CreatedAt = t.CreatedAt,
+                }).ToList() : null
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return ("ERROR", null);
         }
     }
 }
@@ -362,4 +644,5 @@ public interface IProductService
     Task<List<ProductDto>?> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit);
     Task<List<ProductDto>?> GetProductsByCategory(string category, bool reviews, string orderBy, string order, int page, int limit);
     Task<ProductDto?> GetProductById(string productId);
+    Task<(string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model);
 }

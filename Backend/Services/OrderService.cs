@@ -89,42 +89,55 @@ public class OrderService : IOrderService
                 return ("NOT_FOUND", null, null);
             }
 
-            if (order.Products.Count == 0) {
+            if (order.Products.Count == 0)
+            {
                 return ("SUCCESS", new List<ProductDto>(), new List<EventDto>());
-            } else if (order.Products.Count > 64) {
+            }
+            else if (order.Products.Count > 64)
+            {
                 return ("TOO_MANY", null, null);
             }
 
             var products = new List<ProductDto>();
             var events = new List<EventDto>();
 
-            order.Products.ForEach(x => {
-                if (x.IsEvent) {
+            order.Products.ForEach(x =>
+            {
+                if (x.IsEvent)
+                {
                     var eventData = _context.Events.Include(e => e.Dates).Include(e => e.Category).Include(e => e.Tags).FirstOrDefault(e => e.Id == x.ProductId);
-                    
-                    if (eventData == null) {
+
+                    if (eventData == null)
+                    {
                         return;
                     }
 
                     Console.WriteLine(eventData.Name);
 
-                    if (eventData.Dates.Count == 0) {
+                    if (eventData.Dates.Count == 0)
+                    {
                         return;
-                    } else if (eventData.Dates.Count > 64) {
+                    }
+                    else if (eventData.Dates.Count > 64)
+                    {
                         return;
-                    } else if (eventData.Tags?.Count > 64) {
+                    }
+                    else if (eventData.Tags?.Count > 64)
+                    {
                         return;
                     }
 
                     Console.WriteLine(eventData.Name + " pass");
 
-                    events.Add(new EventDto {
+                    events.Add(new EventDto
+                    {
                         Id = eventData.Id.ToString(),
                         Name = eventData.Name,
                         Description = eventData.Description,
                         Time = eventData.Time,
                         Price = eventData.Price,
-                        Category = eventData.Category != null ? new CategoryDto { 
+                        Category = eventData.Category != null ? new CategoryDto
+                        {
                             Id = eventData.Category.Id.ToString(),
                             Name = eventData.Category.Name,
                             Icon = eventData.Category.Icon,
@@ -132,12 +145,14 @@ public class OrderService : IOrderService
                             CreatedAt = eventData.Category.CreatedAt,
                         } : null,
                         Images = eventData.Images,
-                        Dates = eventData.Dates.Select(d => new EventDateDto {
+                        Dates = eventData.Dates.Select(d => new EventDateDto
+                        {
                             Id = d.Id.ToString(),
                             Date = d.Date,
                             Seats = d.Seats,
                         }).ToList(),
-                        Tags = eventData.Tags?.Select(t => new TagDto {
+                        Tags = eventData.Tags?.Select(t => new TagDto
+                        {
                             Id = t.Id.ToString(),
                             Name = t.Name,
                             Description = t.Description,
@@ -145,19 +160,24 @@ public class OrderService : IOrderService
                         }).ToList(),
                         CreatedAt = eventData.CreatedAt,
                     });
-                } else {
+                }
+                else
+                {
                     var productData = _context.Products.Include(p => p.Category).Include(p => p.Tags).FirstOrDefault(p => p.Id == x.ProductId);
 
-                    if (productData == null) {
+                    if (productData == null)
+                    {
                         return;
                     }
 
-                    products.Add(new ProductDto {
+                    products.Add(new ProductDto
+                    {
                         Id = productData.Id.ToString(),
                         Name = productData.Name,
                         Description = productData.Description,
                         Price = productData.Price,
-                        Category = productData.Category != null ? new CategoryDto { 
+                        Category = productData.Category != null ? new CategoryDto
+                        {
                             Id = productData.Category.Id.ToString(),
                             Name = productData.Category.Name,
                             Icon = productData.Category.Icon,
@@ -165,7 +185,8 @@ public class OrderService : IOrderService
                             CreatedAt = productData.Category.CreatedAt,
                         } : null,
                         Images = productData.Images,
-                        Tags = productData.Tags?.Select(t => new TagDto {
+                        Tags = productData.Tags?.Select(t => new TagDto
+                        {
                             Id = t.Id.ToString(),
                             Name = t.Name,
                             Description = t.Description,

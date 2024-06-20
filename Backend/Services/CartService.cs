@@ -32,7 +32,7 @@ public class CartService : ICartService
                 Name = product.Name,
                 Price = product.Price,
                 Quantity = quantity,
-                Image = product.Images != null && product.Images.Any() ? product.Images[0] : "noimage",
+                Image = product.Images != null && product.Images.Any() ? product.Images[0] : null,
                 IsOnSale = false,
             };
 
@@ -55,7 +55,7 @@ public class CartService : ICartService
                 Name = product.Name,
                 Price = product.Price,
                 Quantity = quantity,
-                Image = product.Images != null && product.Images.Any() ? product.Images[0] : "noimage",
+                Image = product.Images != null && product.Images.Any() ? product.Images[0] : null,
                 IsOnSale = false,
             };
 
