@@ -24,27 +24,27 @@ public class EventController : ControllerBase
     {
         long? userId = (long?)HttpContext.Items["UserId"];
         var result = await _eventService.AddEvent(model, userId);
-        if (result == "success")
+        if (result.isSuccess)
         {
             return Ok(new { message = "event created successfully" });
         }
         else
         {
-            if (result == "DATESEMPTY")
+            if (result.status == "INVALIDPRICE")
             {
-                return BadRequest(new { message = "dates array is empty" });
+                return BadRequest(new { message = "price must be greater than 0" });
             }
-            else if (result == "SEATSINVALID")
+            else if (result.status == "INVALIDSEATS")
             {
                 return BadRequest(new { message = "seats must be greater than 0" });
             }
-            else if (result == "DATEINVALID")
+            else if (result.status == "INVALIDDATE")
             {
                 return BadRequest(new { message = "date must be greater than current date" });
             }
             else
             {
-                return StatusCode(500, new { message = result });
+                return StatusCode(500, new { message = result.status });
             }
         }
     }
@@ -70,25 +70,44 @@ public class EventController : ControllerBase
         }
         else
         {
-            List<EventDto> events = await _eventService.GetEvents(reviews, orderBy, order, page, limit);
-            if (events == null)
+            var result = await _eventService.GetEvents(reviews, orderBy, order, page, limit);
+            if (result.isSuccess)
             {
-                return NotFound(new { message = "No events found" });
+                return Ok(JsonSerializer.Serialize(new { events = result.dtos }));
             }
-            return Ok(JsonSerializer.Serialize(new { events = events }));
+            else
+            {
+                if (result.status == "NOTFOUND")
+                {
+                    return NotFound(new { message = "No events found" });
+                }
+                else
+                {
+                    return NotFound(new { message = "No events found" });
+                }
+            }
         }
     }
 
     [HttpGet("{eventId}")]
     public async Task<IActionResult> GetEventById(string eventId, [FromQuery] bool reviews = false)
     {
-        EventDto eventDto = await _eventService.GetEventById(eventId, reviews);
-        if (eventDto == null)
+        var result = await _eventService.GetEventById(eventId, reviews);
+        if (result.isSuccess)
         {
-            return NotFound(new { message = "Event not found" });
+            return Ok(JsonSerializer.Serialize(new { eventDto = result.dto }));
         }
-
-        return Ok(JsonSerializer.Serialize(new { eventDto = eventDto }));
+        else
+        {
+            if (result.status == "NOTFOUND")
+            {
+                return NotFound(new { message = "Event not found" });
+            }
+            else
+            {
+                return StatusCode(500, new { message = result.status });
+            }
+        }
     }
 
 
@@ -113,27 +132,22 @@ public class EventController : ControllerBase
         }
         else
         {
-            List<EventDto> events = await _eventService.GetEventsByCategory(categoryId, reviews, orderBy, order, page, limit);
-            if (events == null)
+            var result = await _eventService.GetEventsByCategory(categoryId, reviews, orderBy, order, page, limit);
+            if (result.isSuccess)
             {
-                return NotFound(new { message = "No events found" });
+                return Ok(JsonSerializer.Serialize(new { events = result.dtos }));
             }
-            return Ok(JsonSerializer.Serialize(new { events = events }));
+            else
+            {
+                if (result.status == "NOTFOUND")
+                {
+                    return NotFound(new { message = "No events found" });
+                }
+                else
+                {
+                    return StatusCode(500, new { message = result.status });
+                }
+            }
         }
     }
-
-    // [HttpPatch("{eventId}")]
-    // [AuthenticateAdminTokenMiddleware]
-    // public async Task<IActionResult> UpdateEvent(string eventId, UpdateEventModel model)
-    // {
-    //     var result = await _eventService.UpdateEvent(eventId, model);
-    //     if (result == "success")
-    //     {
-    //         return Ok(new { message = "event updated successfully" });
-    //     }
-    //     else
-    //     {
-    //         return StatusCode(500, new { message = result });
-    //     }
-    // }
 }

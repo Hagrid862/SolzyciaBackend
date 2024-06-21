@@ -26,7 +26,7 @@ public class AdminController : ControllerBase
         {
             return BadRequest(JsonSerializer.Serialize(new { message = "Client IP not found" }));
         }
-        
+
         var result = await _adminService.Login(model.Username, model.Password, model.Remember, clientIp);
 
         if (result.isSuccess)
@@ -47,7 +47,7 @@ public class AdminController : ControllerBase
         {
             return BadRequest(JsonSerializer.Serialize(new { message = "Client IP not found" }));
         }
-        
+
         var result = await _adminService.VerifyOtp(model.Code, clientIp);
 
         if (result.isSuccess)

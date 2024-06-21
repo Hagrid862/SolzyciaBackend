@@ -16,317 +16,27 @@ public class EventService : IEventService
     {
         _context = context;
     }
-    public async Task<List<EventDto>?> GetEvents(bool reviews, string orderBy, string order, int page, int limit)
-    {
-        try
-        {
-            var events = await _context.Events
-                .Include(x => x.Category)
-                .Include(x => x.Tags)
-                .Include(x => x.Dates)
-                .Include(x => x.Images)
-                .Skip((page - 1) * limit)
-                .Take(limit)
-                .ToListAsync();
 
-            foreach (var ev in events)
-            {
-                Console.WriteLine(ev.Dates.Count + " " + ev.Dates[0].Date);
-            }
-
-            if (events.Count == 0)
-            {
-                return null;
-            }
-
-            List<EventDto> eventsDto = new();
-
-            foreach (var @event in events)
-            {
-                Category? category = @event.Category;
-                EventDate[] dates = @event.Dates.ToArray();
-                List<Tag> tags = @event.Tags ?? new();
-                List<Review> reviewsList = @event.Reviews ?? new();
-
-                CategoryDto? categoryDto = null;
-
-                if (category != null)
-                {
-                    categoryDto = new CategoryDto
-                    {
-                        Id = category.Id.ToString(),
-                        Name = category.Name,
-                        Icon = category.Icon,
-                        Description = category.Description,
-                        CreatedAt = category.CreatedAt
-                    };
-                }
-
-                List<EventDateDto> datesDto = new List<EventDateDto>();
-
-                foreach (var date in dates)
-                {
-                    var dateDto = new EventDateDto
-                    {
-                        Id = date.Id.ToString(),
-                        Date = date.Date,
-                        Seats = date.Seats
-                    };
-                    datesDto.Add(dateDto);
-                }
-
-                List<TagDto>? tagsDto = null;
-
-                foreach (var tag in tags)
-                {
-                    var tagDto = new TagDto
-                    {
-                        Id = tag.Id.ToString(),
-                        Name = tag.Name,
-                        Description = tag.Description,
-                        CreatedAt = tag.CreatedAt
-                    };
-                    tagsDto.Add(tagDto);
-                }
-
-                var eventDto = new EventDto
-                {
-                    Id = @event.Id.ToString(),
-                    Name = @event.Name,
-                    Description = @event.Description,
-                    Time = @event.Time,
-                    Price = @event.Price,
-                    Images = @event.Images,
-                    Category = categoryDto ?? null,
-                    Tags = tagsDto,
-                    Dates = datesDto ?? null,
-                    CreatedAt = @event.CreatedAt
-                };
-                eventsDto.Add(eventDto);
-            }
-            return eventsDto;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            return null;
-        }
-
-    }
-
-    public async Task<EventDto?> GetEventById(string eventId, bool reviews)
-    {
-        try
-        {
-            var @event = await _context.Events
-                .Include(x => x.Category)
-                .Include(x => x.Tags)
-                .Include(x => x.Dates)
-                .Include(x => x.Images)
-                .FirstOrDefaultAsync(x => x.Id == long.Parse(eventId));
-
-            if (@event == null)
-            {
-                return null;
-            }
-
-            Category? category = @event.Category;
-            EventDate[] dates = @event.Dates.ToArray();
-            List<Tag> tags = @event.Tags ?? new();
-            List<Review> reviewsList = @event.Reviews ?? new();
-
-            CategoryDto? categoryDto = null;
-
-            if (category != null)
-            {
-                categoryDto = new CategoryDto
-                {
-                    Id = category.Id.ToString(),
-                    Name = category.Name,
-                    Icon = category.Icon,
-                    Description = category.Description,
-                    CreatedAt = category.CreatedAt
-                };
-            }
-
-            List<EventDateDto> datesDto = new List<EventDateDto>();
-
-            foreach (var date in dates)
-            {
-                var dateDto = new EventDateDto
-                {
-                    Id = date.Id.ToString(),
-                    Date = date.Date,
-                    Seats = date.Seats
-                };
-                datesDto.Add(dateDto);
-            }
-
-            List<TagDto>? tagsDto = null;
-
-            foreach (var tag in tags)
-            {
-                var tagDto = new TagDto
-                {
-                    Id = tag.Id.ToString(),
-                    Name = tag.Name,
-                    Description = tag.Description,
-                    CreatedAt = tag.CreatedAt
-                };
-                tagsDto.Add(tagDto);
-            }
-
-            var eventDto = new EventDto
-            {
-                Id = @event.Id.ToString(),
-                Name = @event.Name,
-                Description = @event.Description,
-                Time = @event.Time,
-                Price = @event.Price,
-                Images = @event.Images,
-                Category = categoryDto ?? null,
-                Tags = tagsDto,
-                Dates = datesDto ?? null,
-                CreatedAt = @event.CreatedAt
-            };
-
-            return eventDto;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            return null;
-        }
-    }
-
-    public async Task<List<EventDto>> GetEventsByCategory(string categoryId, bool reviews, string orderBy, string order, int page, int limit)
-    {
-        try
-        {
-            var query = _context.Events
-                .Include(x => x.Category)
-                .Include(x => x.Tags)
-                .Include(x => x.Dates)
-                .Include(x => x.Images)
-                .Where(x => x.Category.Id == long.Parse(categoryId))
-                .Skip((page - 1) * limit)
-                .Take(limit);
-
-            switch (orderBy)
-            {
-                case "price":
-                    query = order == "asc" ? query.OrderBy(x => x.Price) : query.OrderByDescending(x => x.Price);
-                    break;
-                case "name":
-                    query = order == "asc" ? query.OrderBy(x => x.Name) : query.OrderByDescending(x => x.Name);
-                    break;
-                // Add more cases as needed
-                default:
-                    query = order == "asc" ? query.OrderBy(x => x.CreatedAt) : query.OrderByDescending(x => x.CreatedAt);
-                    break;
-            }
-
-            var events = await query.ToListAsync();
-
-            if (events.Count == 0)
-            {
-                return null;
-            }
-
-            List<EventDto> eventsDto = new();
-
-            foreach (var @event in events)
-            {
-                Category? category = @event.Category;
-                EventDate[] dates = @event.Dates.ToArray();
-                List<Tag> tags = @event.Tags ?? new();
-                List<Review> reviewsList = @event.Reviews ?? new();
-
-                CategoryDto? categoryDto = null;
-
-                if (category != null)
-                {
-                    categoryDto = new CategoryDto
-                    {
-                        Id = category.Id.ToString(),
-                        Name = category.Name,
-                        Icon = category.Icon,
-                        Description = category.Description,
-                        CreatedAt = category.CreatedAt
-                    };
-                }
-
-                List<EventDateDto> datesDto = new List<EventDateDto>();
-
-                foreach (var date in dates)
-                {
-                    var dateDto = new EventDateDto
-                    {
-                        Id = date.Id.ToString(),
-                        Date = date.Date,
-                        Seats = date.Seats
-                    };
-                    datesDto.Add(dateDto);
-                }
-
-                List<TagDto>? tagsDto = null;
-
-                foreach (var tag in tags)
-                {
-                    var tagDto = new TagDto
-                    {
-                        Id = tag.Id.ToString(),
-                        Name = tag.Name,
-                        Description = tag.Description,
-                        CreatedAt = tag.CreatedAt
-                    };
-                    tagsDto.Add(tagDto);
-                }
-
-                var eventDto = new EventDto
-                {
-                    Id = @event.Id.ToString(),
-                    Name = @event.Name,
-                    Description = @event.Description,
-                    Time = @event.Time,
-                    Price = @event.Price,
-                    Images = @event.Images,
-                    Category = categoryDto ?? null,
-                    Tags = tagsDto,
-                    Dates = datesDto ?? null,
-                    CreatedAt = @event.CreatedAt
-                };
-                eventsDto.Add(eventDto);
-            }
-
-            return eventsDto;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            return null;
-        }
-    }
-    public async Task<string> AddEvent(AddEventModel model, long? userId)
+    public async Task<(bool isSuccess, string status)> AddEvent(AddEventModel model, long? userId)
     {
         try
         {
             List<DateSeat>? datesObject = JsonSerializer.Deserialize<List<DateSeat>>(model.Dates); List<EventDate> dates = new();
             if (datesObject == null)
             {
-                return "DATESEMPTY";
+                return (false, "INVALIDDATE");
             }
 
             for (int i = 0; i < datesObject.Count; i++)
             {
                 if (datesObject[i].seats < 1)
                 {
-                    return "SEATSINVALID";
+                    return (false, "INVALIDSEATS");
                 }
 
                 if (DateTime.Parse(datesObject[i].dateIso) < DateTime.Now)
                 {
-                    return "DATEINVALID";
+                    return (false, "INVALIDPRICE");
                 }
 
                 var date = new EventDate
@@ -433,20 +143,309 @@ public class EventService : IEventService
             await _context.Events.AddAsync(@event);
             await _context.SaveChangesAsync();
 
-            return "SUCCESS";
+            return (true, "SUCCESS");
+        }
+        catch
+        {
+            return (false, "ERROR");
+        }
+    }
+
+    public async Task<(bool isSuccess, string status, List<EventDto>? dtos)> GetEvents(bool reviews, string orderBy, string order, int page, int limit)
+    {
+        try
+        {
+            var events = await _context.Events
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .Include(x => x.Dates)
+                .Include(x => x.Images)
+                .Skip((page - 1) * limit)
+                .Take(limit)
+                .ToListAsync();
+
+            foreach (var ev in events)
+            {
+                Console.WriteLine(ev.Dates.Count + " " + ev.Dates[0].Date);
+            }
+
+            if (events.Count == 0)
+            {
+                return (false, "NOTFOUND", null);
+            }
+
+            List<EventDto> eventsDto = new();
+
+            foreach (var @event in events)
+            {
+                Category? category = @event.Category;
+                EventDate[] dates = @event.Dates.ToArray();
+                List<Tag> tags = @event.Tags ?? new();
+                List<Review> reviewsList = @event.Reviews ?? new();
+
+                CategoryDto? categoryDto = null;
+
+                if (category != null)
+                {
+                    categoryDto = new CategoryDto
+                    {
+                        Id = category.Id.ToString(),
+                        Name = category.Name,
+                        Icon = category.Icon,
+                        Description = category.Description,
+                        CreatedAt = category.CreatedAt
+                    };
+                }
+
+                List<EventDateDto> datesDto = new List<EventDateDto>();
+
+                foreach (var date in dates)
+                {
+                    var dateDto = new EventDateDto
+                    {
+                        Id = date.Id.ToString(),
+                        Date = date.Date,
+                        Seats = date.Seats
+                    };
+                    datesDto.Add(dateDto);
+                }
+
+                List<TagDto>? tagsDto = new List<TagDto>();
+
+                foreach (var tag in tags)
+                {
+                    var tagDto = new TagDto
+                    {
+                        Id = tag.Id.ToString(),
+                        Name = tag.Name,
+                        Description = tag.Description,
+                        CreatedAt = tag.CreatedAt
+                    };
+                    tagsDto.Add(tagDto);
+                }
+
+                var eventDto = new EventDto
+                {
+                    Id = @event.Id.ToString(),
+                    Name = @event.Name,
+                    Description = @event.Description,
+                    Time = @event.Time,
+                    Price = @event.Price,
+                    Images = @event.Images,
+                    Category = categoryDto ?? null,
+                    Tags = tagsDto.Count > 0 ? tagsDto : null,
+                    Dates = datesDto ?? null,
+                    CreatedAt = @event.CreatedAt
+                };
+                eventsDto.Add(eventDto);
+            }
+            return (true, "SUCCESS", eventsDto);
+        }
+        catch
+        {
+            return (false, "ERROR", null);
+        }
+
+    }
+
+    public async Task<(bool isSuccess, string status, EventDto? dto)> GetEventById(string eventId, bool reviews)
+    {
+        try
+        {
+            var @event = await _context.Events
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .Include(x => x.Dates)
+                .Include(x => x.Images)
+                .FirstOrDefaultAsync(x => x.Id == long.Parse(eventId));
+
+            if (@event == null)
+            {
+                return (false, "NOEVENT", null);
+            }
+
+            Category? category = @event.Category;
+            EventDate[] dates = @event.Dates.ToArray();
+            List<Tag> tags = @event.Tags ?? new();
+            List<Review> reviewsList = @event.Reviews ?? new();
+
+            CategoryDto? categoryDto = null;
+
+            if (category != null)
+            {
+                categoryDto = new CategoryDto
+                {
+                    Id = category.Id.ToString(),
+                    Name = category.Name,
+                    Icon = category.Icon,
+                    Description = category.Description,
+                    CreatedAt = category.CreatedAt
+                };
+            }
+
+            List<EventDateDto> datesDto = new List<EventDateDto>();
+
+            foreach (var date in dates)
+            {
+                var dateDto = new EventDateDto
+                {
+                    Id = date.Id.ToString(),
+                    Date = date.Date,
+                    Seats = date.Seats
+                };
+                datesDto.Add(dateDto);
+            }
+
+            List<TagDto>? tagsDto = new List<TagDto>();
+
+            foreach (var tag in tags)
+            {
+                var tagDto = new TagDto
+                {
+                    Id = tag.Id.ToString(),
+                    Name = tag.Name,
+                    Description = tag.Description,
+                    CreatedAt = tag.CreatedAt
+                };
+                tagsDto.Add(tagDto);
+            }
+
+            var eventDto = new EventDto
+            {
+                Id = @event.Id.ToString(),
+                Name = @event.Name,
+                Description = @event.Description,
+                Time = @event.Time,
+                Price = @event.Price,
+                Images = @event.Images,
+                Category = categoryDto ?? null,
+                Tags = tagsDto.Count > 0 ? tagsDto : null,
+                Dates = datesDto ?? null,
+                CreatedAt = @event.CreatedAt
+            };
+
+            return (true, "SUCCESS", eventDto);
         }
         catch (Exception e)
         {
             Console.WriteLine(e.Message);
-            return e.Message;
+            return (false, "ERROR", null);
+        }
+    }
+
+    public async Task<(bool isSuccess, string status, List<EventDto>? dtos)> GetEventsByCategory(string categoryId, bool reviews, string orderBy, string order, int page, int limit)
+    {
+        try
+        {
+            var query = _context.Events
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .Include(x => x.Dates)
+                .Include(x => x.Images)
+                .Where(x => x.Category != null && x.Category.Id == long.Parse(categoryId))
+                .Skip((page - 1) * limit)
+                .Take(limit);
+
+            switch (orderBy)
+            {
+                case "price":
+                    query = order == "asc" ? query.OrderBy(x => x.Price) : query.OrderByDescending(x => x.Price);
+                    break;
+                case "name":
+                    query = order == "asc" ? query.OrderBy(x => x.Name) : query.OrderByDescending(x => x.Name);
+                    break;
+                default:
+                    query = order == "asc" ? query.OrderBy(x => x.CreatedAt) : query.OrderByDescending(x => x.CreatedAt);
+                    break;
+            }
+
+            var events = await query.ToListAsync();
+
+            if (events.Count == 0)
+            {
+                return (false, "NOEVENTS", null);
+            }
+
+            List<EventDto> eventsDto = new();
+
+            foreach (var @event in events)
+            {
+                Category? category = @event.Category;
+                EventDate[] dates = @event.Dates.ToArray();
+                List<Tag> tags = @event.Tags ?? new();
+                List<Review> reviewsList = @event.Reviews ?? new();
+
+                CategoryDto? categoryDto = null;
+
+                if (category != null)
+                {
+                    categoryDto = new CategoryDto
+                    {
+                        Id = category.Id.ToString(),
+                        Name = category.Name,
+                        Icon = category.Icon,
+                        Description = category.Description,
+                        CreatedAt = category.CreatedAt
+                    };
+                }
+
+                List<EventDateDto> datesDto = new List<EventDateDto>();
+
+                foreach (var date in dates)
+                {
+                    var dateDto = new EventDateDto
+                    {
+                        Id = date.Id.ToString(),
+                        Date = date.Date,
+                        Seats = date.Seats
+                    };
+                    datesDto.Add(dateDto);
+                }
+
+                List<TagDto>? tagsDto = new List<TagDto>();
+
+                foreach (var tag in tags)
+                {
+                    var tagDto = new TagDto
+                    {
+                        Id = tag.Id.ToString(),
+                        Name = tag.Name,
+                        Description = tag.Description,
+                        CreatedAt = tag.CreatedAt
+                    };
+                    tagsDto.Add(tagDto);
+                }
+
+                var eventDto = new EventDto
+                {
+                    Id = @event.Id.ToString(),
+                    Name = @event.Name,
+                    Description = @event.Description,
+                    Time = @event.Time,
+                    Price = @event.Price,
+                    Images = @event.Images,
+                    Category = categoryDto ?? null,
+                    Tags = tagsDto.Count > 0 ? tagsDto : null,
+                    Dates = datesDto ?? null,
+                    CreatedAt = @event.CreatedAt
+                };
+                eventsDto.Add(eventDto);
+            }
+
+            return (true, "SUCCESS", eventsDto);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return (false, "ERROR", null);
         }
     }
 }
 
 public interface IEventService
 {
-    Task<List<EventDto>?> GetEvents(bool reviews, string orderBy, string order, int page, int limit);
-    Task<EventDto?> GetEventById(string eventId, bool reviews);
-    Task<List<EventDto>> GetEventsByCategory(string categoryId, bool reviews, string orderBy, string order, int page, int limit);
-    Task<string> AddEvent(AddEventModel model, long? userId);
+    Task<(bool isSuccess, string status)> AddEvent(AddEventModel model, long? userId);
+    Task<(bool isSuccess, string status, List<EventDto>? dtos)> GetEvents(bool reviews, string orderBy, string order, int page, int limit);
+    Task<(bool isSuccess, string status, EventDto? dto)> GetEventById(string eventId, bool reviews);
+    Task<(bool isSuccess, string status, List<EventDto>? dtos)> GetEventsByCategory(string categoryId, bool reviews, string orderBy, string order, int page, int limit);
 }
