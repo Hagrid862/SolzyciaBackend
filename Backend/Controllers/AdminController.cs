@@ -21,7 +21,12 @@ public class AdminController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
-        var clientIp = HttpContext.Connection.RemoteIpAddress.ToString();
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (clientIp == null)
+        {
+            return BadRequest(JsonSerializer.Serialize(new { message = "Client IP not found" }));
+        }
+        
         var result = await _adminService.Login(model.Username, model.Password, model.Remember, clientIp);
 
         if (result.isSuccess)
@@ -37,7 +42,12 @@ public class AdminController : ControllerBase
     [HttpPost("verify-otp")]
     public async Task<IActionResult> Verify([FromBody] VerifyModel model)
     {
-        var clientIp = HttpContext.Connection.RemoteIpAddress.ToString();
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (clientIp == null)
+        {
+            return BadRequest(JsonSerializer.Serialize(new { message = "Client IP not found" }));
+        }
+        
         var result = await _adminService.VerifyOtp(model.Code, clientIp);
 
         if (result.isSuccess)
