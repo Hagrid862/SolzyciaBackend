@@ -22,9 +22,9 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
         var clientIp = HttpContext.Connection.RemoteIpAddress.ToString();
-        var (isSuccess, status) = await _adminService.Login(model.Username, model.Password, model.Remember, clientIp);
+        var result = await _adminService.Login(model.Username, model.Password, model.Remember, clientIp);
 
-        if (isSuccess)
+        if (result.isSuccess)
         {
             return Ok(JsonSerializer.Serialize(new { message = "2FA Sent to mail" }));
         }
@@ -38,23 +38,23 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> Verify([FromBody] VerifyModel model)
     {
         var clientIp = HttpContext.Connection.RemoteIpAddress.ToString();
-        var (isSuccess, status, access, refresh) = await _adminService.VerifyOtp(model.Code, clientIp);
+        var result = await _adminService.VerifyOtp(model.Code, clientIp);
 
-        if (isSuccess)
+        if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { message = "Login successful", access = access, refresh = refresh }));
+            return Ok(JsonSerializer.Serialize(new { message = "Login successful", access = result.access, refresh = result.refresh }));
         }
         else
         {
-            if (status == "NOTFOUND")
+            if (result.status == "NOTFOUND")
             {
                 return NotFound(JsonSerializer.Serialize(new { message = "User or 2FA request not found" }));
             }
-            else if (status == "INVALID")
+            else if (result.status == "INVALID")
             {
                 return BadRequest(JsonSerializer.Serialize(new { message = "Invalid code" }));
             }
-            else if (status == "EXPIRED")
+            else if (result.status == "EXPIRED")
             {
                 return BadRequest(JsonSerializer.Serialize(new { message = "Code expired" }));
             }
@@ -74,14 +74,14 @@ public class AdminController : ControllerBase
             return BadRequest(JsonSerializer.Serialize(new { message = "Token not found" }));
         }
 
-        var (isSuccess, status, exists, valid) = await _adminService.VerifyToken(token);
-        if (isSuccess)
+        var result = await _adminService.VerifyToken(token);
+        if (result.isSuccess)
         {
-            if (exists && valid)
+            if (result.exists && result.valid)
             {
                 return Ok(JsonSerializer.Serialize(new { message = "Token is valid" }));
             }
-            else if (exists && !valid)
+            else if (result.exists && !result.valid)
             {
                 return BadRequest(JsonSerializer.Serialize(new { message = "Token is invalid" }));
             }
@@ -105,18 +105,18 @@ public class AdminController : ControllerBase
             return BadRequest(JsonSerializer.Serialize(new { message = "Token not found" }));
         }
 
-        var (isSuccess, status, access, refresh) = await _adminService.RefreshToken(token);
-        if (isSuccess)
+        var result = await _adminService.RefreshToken(token);
+        if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { message = "Token refreshed", access = access, refresh = refresh }));
+            return Ok(JsonSerializer.Serialize(new { message = "Token refreshed", access = result.access, refresh = result.refresh }));
         }
         else
         {
-            if (status == "NOTFOUND")
+            if (result.status == "NOTFOUND")
             {
                 return NotFound(JsonSerializer.Serialize(new { message = "Token not found" }));
             }
-            else if (status == "INVALID")
+            else if (result.status == "INVALID")
             {
                 return BadRequest(JsonSerializer.Serialize(new { message = "Token is invalid" }));
             }
