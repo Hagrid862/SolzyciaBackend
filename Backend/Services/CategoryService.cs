@@ -16,20 +16,28 @@ public class CategoryService : ICategoryService
         _context = context;
     }
 
-    public async Task<List<CategoryDto>> GetCategories()
+    public async Task<(bool isSuccess, string status, List<CategoryDto>? categories)> GetCategories()
     {
-        var categories = await _context.Categories.ToListAsync();
-        return categories.Select(c => new CategoryDto
+        try
         {
-            Id = c.Id.ToString(),
-            Name = c.Name,
-            Icon = c.Icon,
-            Description = c.Description,
-            CreatedAt = c.CreatedAt
-        }).ToList();
+            var categories = await _context.Categories.ToListAsync();
+            var dtos = categories.Select(c => new CategoryDto
+            {
+                Id = c.Id.ToString(),
+                Name = c.Name,
+                Icon = c.Icon,
+                Description = c.Description,
+                CreatedAt = c.CreatedAt
+            }).ToList();
+            return (true, "SUCCESS", dtos);
+        }
+        catch
+        {
+            return (false, "ERROR", null);
+        }
     }
 
-    public async Task<string> AddCategory(AddCategoryModel model)
+    public async Task<(bool isSuccess, string status)> AddCategory(AddCategoryModel model)
     {
         try
         {
@@ -43,59 +51,59 @@ public class CategoryService : ICategoryService
             };
             await _context.Categories.AddAsync(category);
             await _context.SaveChangesAsync();
-            return "SUCCESS";
+            return (true, "SUCCESS");
         }
         catch (Exception e)
         {
-            return "ERROR";
+            return (false, "ERROR");
         }
     }
 
-    public async Task<string> UpdateCategory(UpdateCategoryModel model)
+    public async Task<(bool isSuccess, string status)> UpdateCategory(UpdateCategoryModel model)
     {
         try
         {
             var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.Id));
             if (category == null)
-                return "NOTFOUND";
+                return (false, "NOTFOUND");
 
             category.Name = model.Name;
             category.Description = model.Description;
             category.Icon = model.Icon;
             await _context.SaveChangesAsync();
-            return "SUCCESS";
+            return (true, "SUCCESS");
         }
         catch (Exception e)
         {
-            return "ERROR";
+            return (false, "ERROR");
         }
     }
 
-    public async Task<string> DeleteCategory(long id)
+    public async Task<(bool isSuccess, string status)> DeleteCategory(long id)
     {
         try
         {
             var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
             if (category == null)
-                return "NOTFOUND";
+                return (false, "NOTFOUND");
 
             Console.WriteLine(category.Name);
 
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
-            return "SUCCESS";
+            return (true, "SUCCESS");
         }
         catch (Exception e)
         {
-            return "ERROR";
+            return (false, "ERROR");
         }
     }
 }
 
 public interface ICategoryService
 {
-    Task<List<CategoryDto>> GetCategories();
-    Task<string> AddCategory(AddCategoryModel category);
-    Task<string> UpdateCategory(UpdateCategoryModel category);
-    Task<string> DeleteCategory(long id);
+    Task<(bool isSuccess, string status, List<CategoryDto>? categories)> GetCategories();
+    Task<(bool isSuccess, string status)> AddCategory(AddCategoryModel category);
+    Task<(bool isSuccess, string status)> UpdateCategory(UpdateCategoryModel category);
+    Task<(bool isSuccess, string status)> DeleteCategory(long id);
 }
