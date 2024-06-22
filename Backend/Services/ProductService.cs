@@ -17,24 +17,21 @@ public class ProductService : IProductService
         _context = context;
     }
 
-    public async Task<string> AddProduct(AddProductModel model, long? userId)
+    public async Task<(bool isSuccess, string status)> AddProduct(AddProductModel model, long? userId)
     {
         try
         {
-            Console.WriteLine("Tags: " + model.Tags);
             if (userId == null)
-                return "ERROR";
+                return (false, "UNAUTHORIZED");
 
             Category? category = null;
-
-            Console.WriteLine("Category ID: " + model.CategoryId);
 
             if (model.CategoryId != null)
             {
                 category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == long.Parse(model.CategoryId));
 
                 if (category == null)
-                    return "NOTFOUND";
+                    return (false, "CATEGORYNOTFOUND");
             }
 
             List<long> tagsId = new List<long>();
@@ -43,11 +40,8 @@ public class ProductService : IProductService
             {
                 var tagsList = model.Tags.Split(",").ToList();
 
-                Console.WriteLine("Tags List: " + tagsList.Count());
-
                 foreach (var tag in tagsList)
                 {
-                    Console.WriteLine("Tag: " + tag);
                     var tagEntity = await _context.Tags.FirstOrDefaultAsync(t => t.Name == tag);
                     if (tagEntity == null)
                     {
@@ -87,7 +81,7 @@ public class ProductService : IProductService
                 var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
                 if (string.IsNullOrEmpty(extension) || !extension.Equals(".jpg") && !extension.Equals(".png") && !extension.Equals(".jpeg") && !extension.Equals(".webp"))
                 {
-                    throw new Exception("Invalid image format");
+                    return (false, "INVALIDIMAGEFORMAT");
                 }
 
                 string mimeType = extension switch
@@ -134,16 +128,16 @@ public class ProductService : IProductService
             await _context.Products.AddAsync(newProduct);
             await _context.SaveChangesAsync();
 
-            return "SUCCESS";
+            return (true, "SUCCESS");
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return "ERROR";
+            return (false, "ERROR");
         }
     }
 
-    public async Task<List<ProductDto>?> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit)
+    public async Task<(bool isSuccess, string status, List<ProductDto>? dtos)> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit)
     {
         try
         {
@@ -152,6 +146,10 @@ public class ProductService : IProductService
                 .Include(p => p.Tags)
                 .Include(p => p.Images)
                 .ToListAsync();
+            if (products.Count == 0)
+            {
+                return (false, "NOTFOUND", null);
+            }
             var productsDto = new List<ProductDto>();
 
             foreach (var product in products)
@@ -202,7 +200,7 @@ public class ProductService : IProductService
 
                     foreach (var review in revs)
                     {
-                        productDto.Reviews.Add(new ReviewDto
+                        productDto.Reviews?.Add(new ReviewDto
                         {
                             Id = review.Id.ToString(),
                             Rating = review.Rating,
@@ -213,32 +211,36 @@ public class ProductService : IProductService
                         });
                     }
 
-                    productDto.Reviews = productDto.Reviews.OrderByDescending(r => r.CreatedAt).ToList();
+                    productDto.Reviews = productDto.Reviews?.OrderByDescending(r => r.CreatedAt).ToList();
                 }
 
                 productsDto.Add(productDto);
             }
 
-            return productsDto.ToList();
+            return (true, "SUCCESS", productsDto.ToList());
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return null;
+            return (false, "ERROR", null);
         }
     }
 
-    public async Task<List<ProductDto>?> GetProductsByCategory(string category, bool reviews, string orderBy, string order, int page, int limit)
+    public async Task<(bool isSuccess, string status, List<ProductDto>? dtos)> GetProductsByCategory(string categoryId, bool reviews, string orderBy, string order, int page, int limit)
     {
         try
         {
-            var categoryId = long.Parse(category);
             var products = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Tags)
                 .Include(p => p.Images)
-                .Where(p => p.Category.Id == categoryId)
+                .Where(x => x.Category != null && x.Category.Id == long.Parse(categoryId))
                 .ToListAsync();
+
+            if (products.Count == 0)
+            {
+                return (false, "NOTFOUND", null);
+            }
             var productsDto = new List<ProductDto>();
 
             foreach (var product in products)
@@ -289,7 +291,7 @@ public class ProductService : IProductService
 
                     foreach (var review in revs)
                     {
-                        productDto.Reviews.Add(new ReviewDto
+                        productDto.Reviews?.Add(new ReviewDto
                         {
                             Id = review.Id.ToString(),
                             Rating = review.Rating,
@@ -300,22 +302,22 @@ public class ProductService : IProductService
                         });
                     }
 
-                    productDto.Reviews = productDto.Reviews.OrderByDescending(r => r.CreatedAt).ToList();
+                    productDto.Reviews = productDto.Reviews?.OrderByDescending(r => r.CreatedAt).ToList();
                 }
 
                 productsDto.Add(productDto);
             }
 
-            return productsDto.ToList();
+            return (true, "SUCCESS", productsDto.ToList());
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return null;
+            return (false, "ERROR", null);
         }
     }
 
-    public async Task<ProductDto?> GetProductById(string productId)
+    public async Task<(bool isSuccess, string status, ProductDto? dto)> GetProductById(string productId)
     {
         try
         {
@@ -327,7 +329,7 @@ public class ProductService : IProductService
 
             if (product == null)
             {
-                return null;
+                return (false, "NOTFOUND", null);
             }
 
             Category? category = product.Category;
@@ -376,16 +378,16 @@ public class ProductService : IProductService
 
             Console.WriteLine("tags: " + productDto.Tags?.Count);
 
-            return productDto;
+            return (true, "SUCCESS", productDto);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return null;
+            return (false, "ERROR", null);
         }
     }
 
-    public async Task<(string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model)
+    public async Task<(bool isSuccess, string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model)
     {
         async static Task<string> makeBase64(IFormFile image)
         {
@@ -421,7 +423,7 @@ public class ProductService : IProductService
 
             if (product == null)
             {
-                return ("NOTFOUND", null);
+                return (false, "NOTFOUND", null);
             }
 
             if (model.Name != null)
@@ -570,7 +572,7 @@ public class ProductService : IProductService
                 var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
                 if (category == null)
                 {
-                    return ("CATEGORYNOTFOUND", null);
+                    return (false, "CATEGORYNOTFOUND", null);
                 }
                 product.Category = category;
             }
@@ -604,7 +606,7 @@ public class ProductService : IProductService
 
             await _context.SaveChangesAsync();
 
-            return ("SUCCESS", new ProductDto
+            return (true, "SUCCESS", new ProductDto
             {
                 Id = product.Id.ToString(),
                 Name = product.Name,
@@ -633,16 +635,16 @@ public class ProductService : IProductService
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return ("ERROR", null);
+            return (false, "ERROR", null);
         }
     }
 }
 
 public interface IProductService
 {
-    Task<string> AddProduct(AddProductModel model, long? userId);
-    Task<List<ProductDto>?> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit);
-    Task<List<ProductDto>?> GetProductsByCategory(string category, bool reviews, string orderBy, string order, int page, int limit);
-    Task<ProductDto?> GetProductById(string productId);
-    Task<(string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model);
+    Task<(bool isSuccess, string status)> AddProduct(AddProductModel model, long? userId);
+    Task<(bool isSuccess, string status, List<ProductDto>? dtos)> GetAllProducts(bool reviews, string orderBy, string order, int page, int limit);
+    Task<(bool isSuccess, string status, List<ProductDto>? dtos)> GetProductsByCategory(string categoryId, bool reviews, string orderBy, string order, int page, int limit);
+    Task<(bool isSuccess, string status, ProductDto? dto)> GetProductById(string productId);
+    Task<(bool isSuccess, string status, ProductDto? dto)> UpdateProduct(string productId, UpdateProductModel model);
 }

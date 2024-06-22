@@ -31,17 +31,28 @@ public class ProductController : ControllerBase
             return BadRequest(new { message = "User ID not found in the request" });
         }
         var result = await _productService.AddProduct(model, userId);
-        if (result == "SUCCESS")
+        if (result.isSuccess)
         {
-            return Ok(new { message = "Product added successfully" });
-        }
-        else if (result == "NOTFOUND")
-        {
-            return NotFound(new { message = "Category not found" });
+            return Ok(JsonSerializer.Serialize(new { message = "Product added successfully" }));
         }
         else
         {
-            return BadRequest(new { message = "Something went wrong" });
+            if (result.status == "UNAUTHORIZED")
+            {
+                return Unauthorized(new { message = "Unauthorized" });
+            }
+            else if (result.status == "CATEGORYNOTFOUND")
+            {
+                return NotFound(new { message = "Category not found" });
+            }
+            else if (result.status == "INVALIDIMAGEFORMAT")
+            {
+                return BadRequest(new { message = "Something went wrong" });
+            }
+            else
+            {
+                return BadRequest(new { message = "Something went wrong" });
+            }
         }
     }
 
@@ -65,18 +76,22 @@ public class ProductController : ControllerBase
             return BadRequest(new { message = "Invalid limit parameter" });
         }
 
-        List<ProductDto> products = await _productService.GetAllProducts(reviews, orderBy, order, page, limit);
+        var result = await _productService.GetAllProducts(reviews, orderBy, order, page, limit);
 
-        if (products == null)
+        if (result.isSuccess)
         {
-            return NotFound(new
-            {
-                message = "No products found"
-            });
+            return Ok(JsonSerializer.Serialize(new { products = result.dtos }));
         }
         else
         {
-            return Ok(JsonSerializer.Serialize(new { products = products }));
+            if (result.status == "NOTFOUND")
+            {
+                return NotFound(new { message = "No products found" });
+            }
+            else
+            {
+                return BadRequest(new { message = "Something went wrong" });
+            }
         }
 
     }
@@ -101,35 +116,43 @@ public class ProductController : ControllerBase
             return BadRequest(new { message = "Invalid limit parameter" });
         }
 
-        List<ProductDto> products = await _productService.GetProductsByCategory(categoryId, reviews, orderBy, order, page, limit);
+        var result = await _productService.GetProductsByCategory(categoryId, reviews, orderBy, order, page, limit);
 
-        if (products == null)
+        if (result.isSuccess)
         {
-            return NotFound(new
-            {
-                message = "No products found"
-            });
+            return Ok(JsonSerializer.Serialize(new { products = result.dtos }));
         }
         else
         {
-            return Ok(JsonSerializer.Serialize(new { products = products }));
+            if (result.status == "NOTFOUND")
+            {
+                return NotFound(new { message = "Category not found" });
+            }
+            else
+            {
+                return BadRequest(new { message = "Something went wrong" });
+            }
         }
     }
 
     [HttpGet("{productId}")]
     public async Task<IActionResult> GetProductById(string productId)
     {
-        ProductDto product = await _productService.GetProductById(productId);
-        if (product == null)
+        var result = await _productService.GetProductById(productId);
+        if (result.isSuccess)
         {
-            return NotFound(new
-            {
-                message = "Product not found"
-            });
+            return Ok(JsonSerializer.Serialize(new { product = result.dto }));
         }
         else
         {
-            return Ok(JsonSerializer.Serialize(new { product = product }));
+            if (result.status == "NOTFOUND")
+            {
+                return NotFound(JsonSerializer.Serialize(new { message = "Product not found" }));
+            }
+            else
+            {
+                return BadRequest(JsonSerializer.Serialize(new { message = "Something went wrong" }));
+            }
         }
     }
 
