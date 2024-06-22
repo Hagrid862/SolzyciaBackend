@@ -18,7 +18,7 @@ public class OrderService : IOrderService
         _context = context;
     }
 
-    public async Task<(string status, long? orderId)> CreateOrder(CreateNewOrderModel model)
+    public async Task<(bool isSuccess, string status, long? orderId)> CreateOrder(CreateNewOrderModel model)
     {
         try
         {
@@ -32,15 +32,15 @@ public class OrderService : IOrderService
             await _context.Orders.AddAsync(order);
             await _context.SaveChangesAsync();
 
-            return ("SUCCESS", order.Id);
+            return (true, "SUCCESS", order.Id);
         }
         catch
         {
-            return ("INTERNAL", null);
+            return (false, "ERROR", null);
         }
     }
 
-    public async Task<(string status, OrderDto? order)> GetOrder(long orderId)
+    public async Task<(bool isSuccess, string status, OrderDto? order)> GetOrder(long orderId)
     {
         try
         {
@@ -48,7 +48,7 @@ public class OrderService : IOrderService
 
             if (order == null)
             {
-                return ("NOT_FOUND", null);
+                return (false, "NOTFOUND", null);
             }
 
             var orderDto = new OrderDto
@@ -70,15 +70,15 @@ public class OrderService : IOrderService
                 CreatedAt = order.CreatedAt,
             };
 
-            return ("SUCCESS", orderDto);
+            return (true, "SUCCESS", orderDto);
         }
         catch
         {
-            return ("INTERNAL", null);
+            return (false, "ERROR", null);
         }
     }
 
-    public async Task<(string status, List<ProductDto>? products, List<EventDto>? events)> GetOrderProducts(long orderId)
+    public async Task<(bool isSuccess, string status, List<ProductDto>? products, List<EventDto>? events)> GetOrderProducts(long orderId)
     {
         try
         {
@@ -86,16 +86,16 @@ public class OrderService : IOrderService
 
             if (order == null)
             {
-                return ("NOT_FOUND", null, null);
+                return (false, "NOTFOUND", null, null);
             }
 
             if (order.Products.Count == 0)
             {
-                return ("SUCCESS", new List<ProductDto>(), new List<EventDto>());
+                return (false, "SUCCESS", new List<ProductDto>(), new List<EventDto>());
             }
             else if (order.Products.Count > 64)
             {
-                return ("TOO_MANY", null, null);
+                return (false, "TOOMANY", null, null);
             }
 
             var products = new List<ProductDto>();
@@ -197,18 +197,18 @@ public class OrderService : IOrderService
                 }
             });
 
-            return ("SUCCESS", products, events);
+            return (true, "SUCCESS", products, events);
         }
         catch
         {
-            return ("INTERNAL", null, null);
+            return (false, "ERROR", null, null);
         }
     }
 }
 
 public interface IOrderService
 {
-    public Task<(string status, long? orderId)> CreateOrder(CreateNewOrderModel model);
-    public Task<(string status, OrderDto? order)> GetOrder(long orderId);
-    public Task<(string status, List<ProductDto> products, List<EventDto> events)> GetOrderProducts(long orderId);
+    public Task<(bool isSuccess, string status, long? orderId)> CreateOrder(CreateNewOrderModel model);
+    public Task<(bool isSuccess, string status, OrderDto? order)> GetOrder(long orderId);
+    public Task<(bool isSuccess, string status, List<ProductDto> products, List<EventDto> events)> GetOrderProducts(long orderId);
 }

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql.Replication;
 
 namespace Backend;
 
@@ -18,7 +19,7 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> CreateOrder([FromBody] CreateNewOrderModel model)
     {
         var result = await _orderService.CreateOrder(model);
-        if (result.status == "SUCCESS")
+        if (result.isSuccess)
         {
             return Ok(JsonSerializer.Serialize(new { orderId = result.orderId.ToString() }));
         }
@@ -32,17 +33,20 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> GetOrder(long orderId)
     {
         var result = await _orderService.GetOrder(orderId);
-        if (result.status == "NOT_FOUND")
+        if (result.isSuccess)
         {
-            return NotFound();
-        }
-        if (result.status == "INTERNAL")
-        {
-            return StatusCode(500);
+            return Ok(JsonSerializer.Serialize(new { order = result.order }));
         }
         else
         {
-            return Ok(JsonSerializer.Serialize(result.order));
+            if (result.status == "NOTFOUND")
+            {
+                return NotFound();
+            }
+            else
+            {
+                return StatusCode(500);
+            }
         }
     }
 
@@ -50,21 +54,24 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> GetOrderProducts(long orderId)
     {
         var result = await _orderService.GetOrderProducts(orderId);
-        if (result.status == "NOT_FOUND")
+        if (result.isSuccess)
         {
-            return NotFound();
-        }
-        else if (result.status == "TOO_MANY")
-        {
-            return StatusCode(400, new { error = "TOO_MANY_PRODUCTS" });
-        }
-        else if (result.status == "INTERNAL")
-        {
-            return StatusCode(500);
+            return Ok(JsonSerializer.Serialize(new { products = result.products }));
         }
         else
         {
-            return Ok(JsonSerializer.Serialize(new { products = result.products, events = result.events }));
+            if (result.status == "NOTFOUND")
+            {
+                return NotFound();
+            }
+            else if (result.status == "TOOMANY")
+            {
+                return BadRequest();
+            }
+            else
+            {
+                return StatusCode(500);
+            }
         }
     }
 }
