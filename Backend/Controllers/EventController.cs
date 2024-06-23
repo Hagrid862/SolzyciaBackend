@@ -26,25 +26,25 @@ public class EventController : ControllerBase
         var result = await _eventService.AddEvent(model, userId);
         if (result.isSuccess)
         {
-            return Ok(new { message = "event created successfully" });
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Event added successfully" }));
         }
         else
         {
             if (result.status == "INVALIDPRICE")
             {
-                return BadRequest(new { message = "price must be greater than 0" });
+                return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDPRICE", Message = "Price must be greater than 0" }));
             }
             else if (result.status == "INVALIDSEATS")
             {
-                return BadRequest(new { message = "seats must be greater than 0" });
+                return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDSEATS", Message = "Seats must be greater than 0" }));
             }
             else if (result.status == "INVALIDDATE")
             {
-                return BadRequest(new { message = "date must be greater than current date" });
+                return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDDATE", Message = "Date must be greater than current date" }));
             }
             else
             {
-                return StatusCode(500, new { message = result.status });
+                return StatusCode(500, JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
             }
         }
     }
@@ -54,36 +54,36 @@ public class EventController : ControllerBase
     {
         if (orderBy is not ("created_at" or "price" or "name" or "rating" or "popularity"))
         {
-            return BadRequest(new { message = "Invalid orderBy parameter" });
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDORDERBY", Message = "Invalid orderBy parameter" }));
         }
         else if (order is not ("desc" or "asc"))
         {
-            return BadRequest(new { message = "Invalid order parameter" });
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDORDER", Message = "Invalid order parameter" }));
         }
         else if (page < 1)
         {
-            return BadRequest(new { message = "Invalid page parameter" });
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDPAGE", Message = "Invalid page parameter" }));
         }
         else if (limit < 1)
         {
-            return BadRequest(new { message = "Invalid limit parameter" });
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDLIMIT", Message = "Invalid limit parameter" }));
         }
         else
         {
             var result = await _eventService.GetEvents(reviews, orderBy, order, page, limit);
             if (result.isSuccess)
             {
-                return Ok(JsonSerializer.Serialize(new { events = result.dtos }));
+                return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Events = result.dtos }));
             }
             else
             {
                 if (result.status == "NOTFOUND")
                 {
-                    return NotFound(new { message = "No events found" });
+                    return NotFound(JsonSerializer.Serialize(new { Status = "NOTFOUND", Message = "No events found" }));
                 }
                 else
                 {
-                    return NotFound(new { message = "No events found" });
+                    return StatusCode(500, JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
                 }
             }
         }
@@ -95,17 +95,17 @@ public class EventController : ControllerBase
         var result = await _eventService.GetEventById(eventId, reviews);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { eventDto = result.dto }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Event = result.dto }));
         }
         else
         {
             if (result.status == "NOTFOUND")
             {
-                return NotFound(new { message = "Event not found" });
+                return NotFound(JsonSerializer.Serialize(new { Status = "NOTFOUND", Message = "Event not found" }));
             }
             else
             {
-                return StatusCode(500, new { message = result.status });
+                return StatusCode(500, JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
             }
         }
     }
@@ -116,36 +116,36 @@ public class EventController : ControllerBase
     {
         if (orderBy is not ("created_at" or "price" or "name" or "rating" or "popularity"))
         {
-            return BadRequest(new { message = "Invalid orderBy parameter" });
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDORDERBY", Message = "Invalid orderBy parameter" }));
         }
         else if (order is not ("desc" or "asc"))
         {
-            return BadRequest(new { message = "Invalid order parameter" });
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDORDER", Message = "Invalid order parameter" }));
         }
         else if (page < 1)
         {
-            return BadRequest(new { message = "Invalid page parameter" });
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDPAGE", Message = "Invalid page parameter" }));
         }
         else if (limit < 1)
         {
-            return BadRequest(new { message = "Invalid limit parameter" });
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INVALIDLIMIT", Message = "Invalid limit parameter" }));
         }
         else
         {
             var result = await _eventService.GetEventsByCategory(categoryId, reviews, orderBy, order, page, limit);
             if (result.isSuccess)
             {
-                return Ok(JsonSerializer.Serialize(new { events = result.dtos }));
+                return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Events = result.dtos }));
             }
             else
             {
                 if (result.status == "NOTFOUND")
                 {
-                    return NotFound(new { message = "No events found" });
+                    return NotFound(JsonSerializer.Serialize(new { Status = "NOTFOUND", Message = "No events found" }));
                 }
                 else
                 {
-                    return StatusCode(500, new { message = result.status });
+                    return StatusCode(500, JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
                 }
             }
         }

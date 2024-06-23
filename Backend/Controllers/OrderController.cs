@@ -21,11 +21,11 @@ public class OrderController : ControllerBase
         var result = await _orderService.CreateOrder(model);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { orderId = result.orderId.ToString() }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Order created successfully", OrderId = result.orderId }));
         }
         else
         {
-            return StatusCode(500);
+            return StatusCode(500, JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
         }
     }
 
@@ -35,17 +35,17 @@ public class OrderController : ControllerBase
         var result = await _orderService.GetOrder(orderId);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { order = result.order }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Order = result.order }));
         }
         else
         {
             if (result.status == "NOTFOUND")
             {
-                return NotFound();
+                return NotFound(JsonSerializer.Serialize(new { Status = "NOTFOUND", Message = "Order not found" }));
             }
             else
             {
-                return StatusCode(500);
+                return StatusCode(500, JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
             }
         }
     }
@@ -56,21 +56,21 @@ public class OrderController : ControllerBase
         var result = await _orderService.GetOrderProducts(orderId);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { products = result.products }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Products = result.products }));
         }
         else
         {
             if (result.status == "NOTFOUND")
             {
-                return NotFound();
+                return NotFound(JsonSerializer.Serialize(new { Status = "NOTFOUND", Message = "Order not found" }));
             }
             else if (result.status == "TOOMANY")
             {
-                return BadRequest();
+                return BadRequest(JsonSerializer.Serialize(new { Status = "TOOMANY", Message = "Too many products in order" }));
             }
             else
             {
-                return StatusCode(500);
+                return StatusCode(500, JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
             }
         }
     }

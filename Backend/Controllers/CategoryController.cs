@@ -24,11 +24,11 @@ public class CategoryController : ControllerBase
         var result = await _categoryService.GetCategories();
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { Message = "SUCCESS", Categories = result.categories }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Categories fetched successfully", Categories = result.categories }));
         }
         else
         {
-            return BadRequest(JsonSerializer.Serialize(new { Message = "Something went wrong" }));
+            return BadRequest(JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
         }
     }
 
@@ -39,11 +39,11 @@ public class CategoryController : ControllerBase
         var result = await _categoryService.AddCategory(model);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { Message = "Category added successfully" }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Category added successfully" }));
         }
         else
         {
-            return StatusCode(500);
+            return StatusCode(500, new { Status = "INTERNAL", Message = "Something went wrong" });
         }
     }
 
@@ -55,17 +55,17 @@ public class CategoryController : ControllerBase
         Console.WriteLine(result);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { Message = "Category updated successfully" }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Category updated successfully" }));
         }
         else
         {
             if (result.status == "NOTFOUND")
             {
-                return NotFound(JsonSerializer.Serialize(new { Message = "Category not found" }));
+                return NotFound(JsonSerializer.Serialize(new { Status = "NOTFOUND", Message = "Category not found" }));
             }
             else
             {
-                return BadRequest(JsonSerializer.Serialize(new { Message = "Something went wrong" }));
+                return BadRequest(JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
             }
         }
     }
@@ -77,17 +77,17 @@ public class CategoryController : ControllerBase
         var result = await _categoryService.DeleteCategory(id);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { Message = "Category deleted successfully" }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Category deleted successfully" }));
         }
         else
         {
             if (result.status == "NOTFOUND")
             {
-                return NotFound(JsonSerializer.Serialize(new { Message = "Category not found" }));
+                return NotFound(JsonSerializer.Serialize(new { Status = "NOTFOUND", Message = "Category not found" }));
             }
             else
             {
-                return BadRequest(JsonSerializer.Serialize(new { Message = "Something went wrong" }));
+                return StatusCode(500, JsonSerializer.Serialize(new { Status = "INTERNAL", Message = "Something went wrong" }));
             }
         }
     }
