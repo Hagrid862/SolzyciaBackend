@@ -19,7 +19,9 @@ public class CartService : ICartService
         {
             if (isEvent)
             {
-                var product = await _context.Events.FirstOrDefaultAsync(x => x.Id == productId);
+                var product = await _context.Events
+                    .Include(p => p.Images)
+                    .FirstOrDefaultAsync(x => x.Id == productId);
                 Console.WriteLine(product == null ? "is null" : "is not null");
 
                 if (product == null)
@@ -42,7 +44,9 @@ public class CartService : ICartService
             }
             else
             {
-                var product = await _context.Products.FirstOrDefaultAsync(x => x.Id == productId);
+                var product = await _context.Products
+                    .Include(p => p.Images)
+                    .FirstOrDefaultAsync(x => x.Id == productId);
                 Console.WriteLine(product == null ? "is null" : "is not null");
 
                 if (product == null)

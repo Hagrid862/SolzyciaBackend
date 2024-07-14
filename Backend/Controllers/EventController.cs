@@ -26,7 +26,7 @@ public class EventController : ControllerBase
         var result = await _eventService.AddEvent(model, userId);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Event added successfully" }));
+            return CreatedAtAction(nameof(GetEventById), new { eventId = result.output?.Id }, JsonSerializer.Serialize(new { Status = "SUCCESS", EventId = result.output.Id }));
         }
         else
         {

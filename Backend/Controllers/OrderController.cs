@@ -1,8 +1,9 @@
-﻿using System.Text.Json;
+﻿using Backend.Services;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql.Replication;
 
-namespace Backend;
+namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -21,7 +22,7 @@ public class OrderController : ControllerBase
         var result = await _orderService.CreateOrder(model);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Order created successfully", OrderId = result.orderId }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Message = "Order created successfully", OrderId = result.orderId.ToString() }));
         }
         else
         {
@@ -54,9 +55,10 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> GetOrderProducts(long orderId)
     {
         var result = await _orderService.GetOrderProducts(orderId);
+        Console.WriteLine(result.products.Count);
         if (result.isSuccess)
         {
-            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Products = result.products }));
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Products = result.products, Events = result.events }));
         }
         else
         {

@@ -7,7 +7,7 @@ using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Backend;
+namespace Backend.Services;
 
 public class OrderService : IOrderService
 {
@@ -105,7 +105,7 @@ public class OrderService : IOrderService
             {
                 if (x.IsEvent)
                 {
-                    var eventData = _context.Events.Include(e => e.Dates).Include(e => e.Category).Include(e => e.Tags).FirstOrDefault(e => e.Id == x.ProductId);
+                    var eventData = _context.Events.Include(e => e.Dates).Include(e => e.Category).Include(e => e.Tags).Include(e => e.Images).FirstOrDefault(e => e.Id == x.ProductId);
 
                     if (eventData == null)
                     {
@@ -163,7 +163,7 @@ public class OrderService : IOrderService
                 }
                 else
                 {
-                    var productData = _context.Products.Include(p => p.Category).Include(p => p.Tags).FirstOrDefault(p => p.Id == x.ProductId);
+                    var productData = _context.Products.Include(p => p.Category).Include(p => p.Tags).Include(p => p.Images).FirstOrDefault(p => p.Id == x.ProductId);
 
                     if (productData == null)
                     {
@@ -197,6 +197,8 @@ public class OrderService : IOrderService
                 }
             });
 
+            Console.WriteLine(products.Count + " ; " + events.Count);
+
             return (true, "SUCCESS", products, events);
         }
         catch
@@ -210,5 +212,5 @@ public interface IOrderService
 {
     public Task<(bool isSuccess, string status, long? orderId)> CreateOrder(CreateNewOrderModel model);
     public Task<(bool isSuccess, string status, OrderDto? order)> GetOrder(long orderId);
-    public Task<(bool isSuccess, string status, List<ProductDto> products, List<EventDto> events)> GetOrderProducts(long orderId);
+    public Task<(bool isSuccess, string status, List<ProductDto>? products, List<EventDto>? events)> GetOrderProducts(long orderId);
 }

@@ -17,26 +17,26 @@ public class EventService : IEventService
         _context = context;
     }
 
-    public async Task<(bool isSuccess, string status)> AddEvent(AddEventModel model, long? userId)
+    public async Task<(bool isSuccess, string status, Event? output)> AddEvent(AddEventModel model, long? userId)
     {
         try
         {
             List<DateSeat>? datesObject = JsonSerializer.Deserialize<List<DateSeat>>(model.Dates); List<EventDate> dates = new();
             if (datesObject == null)
             {
-                return (false, "INVALIDDATE");
+                return (false, "INVALIDDATE", null);
             }
 
             for (int i = 0; i < datesObject.Count; i++)
             {
                 if (datesObject[i].seats < 1)
                 {
-                    return (false, "INVALIDSEATS");
+                    return (false, "INVALIDSEATS", null);
                 }
 
                 if (DateTime.Parse(datesObject[i].dateIso) < DateTime.Now)
                 {
-                    return (false, "INVALIDPRICE");
+                    return (false, "INVALIDPRICE", null);
                 }
 
                 var date = new EventDate
@@ -143,11 +143,11 @@ public class EventService : IEventService
             await _context.Events.AddAsync(@event);
             await _context.SaveChangesAsync();
 
-            return (true, "SUCCESS");
+            return (true, "SUCCESS", @event);
         }
         catch
         {
-            return (false, "ERROR");
+            return (false, "ERROR", null);
         }
     }
 
@@ -261,7 +261,7 @@ public class EventService : IEventService
 
             if (@event == null)
             {
-                return (false, "NOEVENT", null);
+                return (false, "NOTFOUND", null);
             }
 
             Category? category = @event.Category;
@@ -363,7 +363,7 @@ public class EventService : IEventService
 
             if (events.Count == 0)
             {
-                return (false, "NOEVENTS", null);
+                return (false, "NOTFOUND", null);
             }
 
             List<EventDto> eventsDto = new();
@@ -444,7 +444,7 @@ public class EventService : IEventService
 
 public interface IEventService
 {
-    Task<(bool isSuccess, string status)> AddEvent(AddEventModel model, long? userId);
+    Task<(bool isSuccess, string status, Event? output)> AddEvent(AddEventModel model, long? userId);
     Task<(bool isSuccess, string status, List<EventDto>? dtos)> GetEvents(bool reviews, string orderBy, string order, int page, int limit);
     Task<(bool isSuccess, string status, EventDto? dto)> GetEventById(string eventId, bool reviews);
     Task<(bool isSuccess, string status, List<EventDto>? dtos)> GetEventsByCategory(string categoryId, bool reviews, string orderBy, string order, int page, int limit);
