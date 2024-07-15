@@ -23,6 +23,7 @@ public class EventController : ControllerBase
     public async Task<IActionResult> AddEvent(AddEventModel model)
     {
         long? userId = (long?)HttpContext.Items["UserId"];
+        Console.WriteLine(model.Dates);
         var result = await _eventService.AddEvent(model, userId);
         if (result.isSuccess)
         {

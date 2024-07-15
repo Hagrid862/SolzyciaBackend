@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Backend.Data;
 using Backend.Dto;
 using Backend.Helpers;
@@ -21,7 +22,13 @@ public class EventService : IEventService
     {
         try
         {
-            List<DateSeat>? datesObject = JsonSerializer.Deserialize<List<DateSeat>>(model.Dates); List<EventDate> dates = new();
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+            };
+
+            List<DateSeatLocation>? datesObject = JsonSerializer.Deserialize<List<DateSeatLocation>>(model.Dates, options); List<EventDate> dates = new();
             if (datesObject == null)
             {
                 return (false, "INVALIDDATE", null);
@@ -45,7 +52,15 @@ public class EventService : IEventService
                     Date = DateTime.Parse(datesObject[i].dateIso)
                         .ToUniversalTime(),
                     Seats = datesObject[i].seats,
-                    Location = null
+                    Location = new EventLocation()
+                    {
+                        Id = Snowflake.GenerateId(),
+                        Street = datesObject[i].location.Street,
+                        HouseNumber = datesObject[i].location.HouseNumber,
+                        PostalCode = datesObject[i].location.PostalCode,
+                        City = datesObject[i].location.City,
+                        AdditionalInfo = datesObject[i].location.AdditionalInfo
+                    }
                 };
 
                 await _context.EventDates.AddAsync(date);
@@ -145,8 +160,9 @@ public class EventService : IEventService
 
             return (true, "SUCCESS", @event);
         }
-        catch
+        catch (Exception e)
         {
+            Console.WriteLine(e.Message);
             return (false, "ERROR", null);
         }
     }

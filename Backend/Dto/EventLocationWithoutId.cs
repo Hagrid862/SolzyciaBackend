@@ -1,6 +1,6 @@
-namespace Backend.Models;
+namespace Backend.Dto;
 
-public class Location
+public class EventLocationWithoutId
 {
     public required string Street { get; set; }
     public required string HouseNumber { get; set; }
