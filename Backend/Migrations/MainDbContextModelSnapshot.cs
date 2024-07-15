@@ -253,6 +253,33 @@ namespace Backend.Migrations
                     b.ToTable("Orders");
                 });
 
+            modelBuilder.Entity("Backend.Models.OrderProduct", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("IsEvent")
+                        .HasColumnType("boolean");
+
+                    b.Property<long?>("OrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderProduct");
+                });
+
             modelBuilder.Entity("Backend.Models.Product", b =>
                 {
                     b.Property<long>("Id")
@@ -442,33 +469,6 @@ namespace Backend.Migrations
                     b.ToTable("TwoFactorAuths");
                 });
 
-            modelBuilder.Entity("Backend.OrderProduct", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<bool>("IsEvent")
-                        .HasColumnType("boolean");
-
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProductId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("OrderProduct");
-                });
-
             modelBuilder.Entity("Backend.Models.Event", b =>
                 {
                     b.HasOne("Backend.Models.Category", "Category")
@@ -502,6 +502,13 @@ namespace Backend.Migrations
                     b.HasOne("Backend.Models.Product", null)
                         .WithMany("Images")
                         .HasForeignKey("ProductId");
+                });
+
+            modelBuilder.Entity("Backend.Models.OrderProduct", b =>
+                {
+                    b.HasOne("Backend.Models.Order", null)
+                        .WithMany("Products")
+                        .HasForeignKey("OrderId");
                 });
 
             modelBuilder.Entity("Backend.Models.Product", b =>
@@ -559,13 +566,6 @@ namespace Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Admin");
-                });
-
-            modelBuilder.Entity("Backend.OrderProduct", b =>
-                {
-                    b.HasOne("Backend.Models.Order", null)
-                        .WithMany("Products")
-                        .HasForeignKey("OrderId");
                 });
 
             modelBuilder.Entity("Backend.Models.Event", b =>
