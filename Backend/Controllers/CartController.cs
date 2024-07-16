@@ -17,12 +17,21 @@ public class CartController : ControllerBase
     [HttpGet("{itemId}")]
     public async Task<ActionResult<CartItemDto>> GetCartItem([FromRoute] long itemId, [FromQuery] GetCartItemModel model)
     {
-        var cartItem = await _cartService.GetCartItem(itemId, model.Quantity, model.IsEvent);
-        if (cartItem == null)
+        var result = await _cartService.GetCartItem(itemId, model.Quantity, model.IsEvent);
+        if (result.isSuccess)
         {
-            return NotFound();
+            return Ok(JsonSerializer.Serialize(new { Status = "SUCCESS", Item = result.item }));
         }
-
-        return Ok(JsonSerializer.Serialize(cartItem));
+        else
+        {
+            if (result.status == "NOTFOUND")
+            {
+                return NotFound(JsonSerializer.Serialize(new { Status = "NOTFOUND", Message = "Item not found" }));
+            }
+            else
+            {
+                return StatusCode(500, new { Status = "INTERNAL", Message = "Something went wrong" });
+            }
+        }
     }
 }

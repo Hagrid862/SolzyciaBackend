@@ -7,7 +7,7 @@ using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Backend;
+namespace Backend.Services;
 
 public class OrderService : IOrderService
 {
@@ -18,7 +18,7 @@ public class OrderService : IOrderService
         _context = context;
     }
 
-    public async Task<(string status, long? orderId)> CreateOrder(CreateNewOrderModel model)
+    public async Task<(bool isSuccess, string status, long? orderId)> CreateOrder(CreateNewOrderModel model)
     {
         try
         {
@@ -32,15 +32,15 @@ public class OrderService : IOrderService
             await _context.Orders.AddAsync(order);
             await _context.SaveChangesAsync();
 
-            return ("SUCCESS", order.Id);
+            return (true, "SUCCESS", order.Id);
         }
         catch
         {
-            return ("INTERNAL", null);
+            return (false, "ERROR", null);
         }
     }
 
-    public async Task<(string status, OrderDto? order)> GetOrder(long orderId)
+    public async Task<(bool isSuccess, string status, OrderDto? order)> GetOrder(long orderId)
     {
         try
         {
@@ -48,7 +48,7 @@ public class OrderService : IOrderService
 
             if (order == null)
             {
-                return ("NOT_FOUND", null);
+                return (false, "NOTFOUND", null);
             }
 
             var orderDto = new OrderDto
@@ -70,15 +70,15 @@ public class OrderService : IOrderService
                 CreatedAt = order.CreatedAt,
             };
 
-            return ("SUCCESS", orderDto);
+            return (true, "SUCCESS", orderDto);
         }
         catch
         {
-            return ("INTERNAL", null);
+            return (false, "ERROR", null);
         }
     }
 
-    public async Task<(string status, List<ProductDto>? products, List<EventDto>? events)> GetOrderProducts(long orderId)
+    public async Task<(bool isSuccess, string status, List<ProductDto>? products, List<EventDto>? events)> GetOrderProducts(long orderId)
     {
         try
         {
@@ -86,16 +86,16 @@ public class OrderService : IOrderService
 
             if (order == null)
             {
-                return ("NOT_FOUND", null, null);
+                return (false, "NOTFOUND", null, null);
             }
 
             if (order.Products.Count == 0)
             {
-                return ("SUCCESS", new List<ProductDto>(), new List<EventDto>());
+                return (false, "SUCCESS", new List<ProductDto>(), new List<EventDto>());
             }
             else if (order.Products.Count > 64)
             {
-                return ("TOO_MANY", null, null);
+                return (false, "TOOMANY", null, null);
             }
 
             var products = new List<ProductDto>();
@@ -105,7 +105,12 @@ public class OrderService : IOrderService
             {
                 if (x.IsEvent)
                 {
-                    var eventData = _context.Events.Include(e => e.Dates).Include(e => e.Category).Include(e => e.Tags).FirstOrDefault(e => e.Id == x.ProductId);
+                    var eventData = _context.Events
+                        .Include(e => e.Dates).ThenInclude(d => d.Location)
+                        .Include(e => e.Category)
+                        .Include(e => e.Tags)
+                        .Include(e => e.Images)
+                        .FirstOrDefault(e => e.Id == x.ProductId);
 
                     if (eventData == null)
                     {
@@ -150,6 +155,15 @@ public class OrderService : IOrderService
                             Id = d.Id.ToString(),
                             Date = d.Date,
                             Seats = d.Seats,
+                            Location = d.Location != null ? new EventLocationDto
+                            {
+                                Id = d.Location.Id,
+                                Street = d.Location.Street,
+                                HouseNumber = d.Location.HouseNumber,
+                                PostalCode = d.Location.PostalCode,
+                                City = d.Location.City,
+                                AdditionalInfo = d.Location.AdditionalInfo
+                            } : null
                         }).ToList(),
                         Tags = eventData.Tags?.Select(t => new TagDto
                         {
@@ -163,7 +177,7 @@ public class OrderService : IOrderService
                 }
                 else
                 {
-                    var productData = _context.Products.Include(p => p.Category).Include(p => p.Tags).FirstOrDefault(p => p.Id == x.ProductId);
+                    var productData = _context.Products.Include(p => p.Category).Include(p => p.Tags).Include(p => p.Images).FirstOrDefault(p => p.Id == x.ProductId);
 
                     if (productData == null)
                     {
@@ -197,18 +211,20 @@ public class OrderService : IOrderService
                 }
             });
 
-            return ("SUCCESS", products, events);
+            Console.WriteLine(products.Count + " ; " + events.Count);
+
+            return (true, "SUCCESS", products, events);
         }
         catch
         {
-            return ("INTERNAL", null, null);
+            return (false, "ERROR", null, null);
         }
     }
 }
 
 public interface IOrderService
 {
-    public Task<(string status, long? orderId)> CreateOrder(CreateNewOrderModel model);
-    public Task<(string status, OrderDto? order)> GetOrder(long orderId);
-    public Task<(string status, List<ProductDto> products, List<EventDto> events)> GetOrderProducts(long orderId);
+    public Task<(bool isSuccess, string status, long? orderId)> CreateOrder(CreateNewOrderModel model);
+    public Task<(bool isSuccess, string status, OrderDto? order)> GetOrder(long orderId);
+    public Task<(bool isSuccess, string status, List<ProductDto>? products, List<EventDto>? events)> GetOrderProducts(long orderId);
 }

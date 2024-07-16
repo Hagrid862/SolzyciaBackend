@@ -14,24 +14,24 @@ public class AdminService : IAdminService
         _context = context;
     }
 
-    public async Task<string> Login(string userName, string password, bool remember, string clientIp)
+    public async Task<(bool isSuccess, string status)> Login(string userName, string password, bool remember, string clientIp)
     {
         try
         {
             var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Name == userName);
             if (admin == null)
-                return "NOTFOUND";
+                return (false, "INVALID");
 
             var passwordHash = Helpers.Hasher.GetHash(password, admin.PasswordSalt);
             if (passwordHash != admin.PasswordHash)
-                return ("INVALID");
+                return (false, "INVALID");
 
             var code = new Random().Next(10000000, 99999999).ToString();
 
             var sentStatus = Helpers.Mail.Sent2FA(admin.Email, code);
 
             if (sentStatus != "SUCCESS")
-                return "ERROR";
+                return (false, "ERROR");
 
             var twoFactorRequest = new TwoFactorAuth
             {
@@ -46,28 +46,28 @@ public class AdminService : IAdminService
 
             await _context.TwoFactorAuths.AddAsync(twoFactorRequest);
             await _context.SaveChangesAsync();
-            return "SUCCESS";
+            return (true, "SUCCESS");
         }
-        catch (Exception e)
+        catch
         {
-            return "ERROR";
+            return (false, "ERROR");
         }
     }
 
-    public async Task<(string access, string? refresh)> VerifyOtp(string code, string clientIp)
+    public async Task<(bool isSuccess, string status, string? access, string? refresh)> VerifyOtp(string code, string clientIp)
     {
         try
         {
             var twoFactorRequest = await _context.TwoFactorAuths.Include(twoFactorAuth => twoFactorAuth.Admin).FirstOrDefaultAsync(r => r.IP == clientIp && r.Code == code);
 
             if (twoFactorRequest == null)
-                return ("NOTFOUND", null);
+                return (false, "NOTFOUND", null, null);
 
             if (twoFactorRequest.IsUsed)
-                return ("INVALID", null);
+                return (false, "INVALID", null, null);
 
             if (DateTime.UtcNow - twoFactorRequest.CreatedAt > TimeSpan.FromMinutes(15))
-                return ("EXPIRED", null);
+                return (false, "EXPIRED", null, null);
 
             var admin = twoFactorRequest.Admin;
 
@@ -75,65 +75,76 @@ public class AdminService : IAdminService
             {
                 var (refresh, access) = JWT.GenerateLongTermAdminToken(admin);
                 if (refresh == "NOTINITIALIZED" || access == "NOTINITIALIZED" || refresh == "ERROR" || access == "ERROR")
-                    return ("INTERNALERROR", null);
+                    return (false, "INTERNALERROR", null, null);
 
                 twoFactorRequest.IsUsed = true;
                 _context.TwoFactorAuths.Update(twoFactorRequest);
                 await _context.SaveChangesAsync();
-                return (access, refresh);
+                return (true, "SUCCESS", access, refresh);
             }
             else
             {
                 var token = JWT.GenerateAdminToken(admin);
                 if (token == "NOTINITIALIZED" || token == "ERROR")
-                    return ("INTERNALERROR", "");
+                    return (false, "INTERNALERROR", null, null);
 
                 twoFactorRequest.IsUsed = true;
                 _context.TwoFactorAuths.Update(twoFactorRequest);
                 await _context.SaveChangesAsync();
-                return (token, null);
+                return (true, "SUCCESS", token, null);
             }
         }
-        catch (Exception e)
+        catch
         {
-            return ("INTERNALERROR", "");
+            return (false, "INTERNALERROR", null, null);
         }
     }
 
-    public async Task<(bool exists, bool valid)> VerifyToken(string token)
+    public async Task<(bool isSuccess, string status, bool exists, bool valid)> VerifyToken(string token)
     {
         try
         {
-            return JWT.IsValid(token);
+            (bool exists, bool valid) = JWT.IsValid(token);
+
+            if (!exists)
+                return (true, "SUCCESS", false, false);
+
+            if (exists && !valid)
+                return (true, "SUCCESS", true, false);
+
+            if (exists && valid)
+                return (true, "SUCCESS", true, true);
+
+            return (false, "ERROR", false, false);
         }
         catch (Exception e)
         {
-            return (false, false);
+            return (false, "ERROR", false, false);
         }
     }
 
-    public async Task<(string access, string refresh)> RefreshToken(string refreshToken)
+    public async Task<(bool isSuccess, string status, string? access, string? refresh)> RefreshToken(string refreshToken)
     {
         try
         {
             var (access, refresh) = JWT.RefreshToken(refreshToken);
 
             if (access == "NOTINITIALIZED" || refresh == "NOTINITIALIZED" || access == "ERROR" || refresh == "ERROR")
-                return ("INTERNALERROR", "");
+                return (false, "INTERNALERROR", null, null);
 
-            return (access, refresh);
+            return (true, "SUCCESS", access, refresh);
         }
-        catch (Exception e)
+        catch
         {
-            return ("INTERNALERROR", "");
+            return (true, "INTERNALERROR", null, null);
         }
     }
 }
 
 public interface IAdminService
 {
-    Task<string> Login(string userName, string password, bool remember, string clientIp);
-    Task<(string access, string? refresh)> VerifyOtp(string code, string clientIp);
-    Task<(bool exists, bool valid)> VerifyToken(string token);
-    Task<(string access, string refresh)> RefreshToken(string refresh);
+    Task<(bool isSuccess, string status)> Login(string userName, string password, bool remember, string clientIp);
+    Task<(bool isSuccess, string status, string? access, string? refresh)> VerifyOtp(string code, string clientIp);
+    Task<(bool isSuccess, string status, bool exists, bool valid)> VerifyToken(string token);
+    Task<(bool isSuccess, string status, string? access, string? refresh)> RefreshToken(string refresh);
 }
