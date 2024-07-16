@@ -105,7 +105,12 @@ public class OrderService : IOrderService
             {
                 if (x.IsEvent)
                 {
-                    var eventData = _context.Events.Include(e => e.Dates).Include(e => e.Category).Include(e => e.Tags).Include(e => e.Images).FirstOrDefault(e => e.Id == x.ProductId);
+                    var eventData = _context.Events
+                        .Include(e => e.Dates).ThenInclude(d => d.Location)
+                        .Include(e => e.Category)
+                        .Include(e => e.Tags)
+                        .Include(e => e.Images)
+                        .FirstOrDefault(e => e.Id == x.ProductId);
 
                     if (eventData == null)
                     {
@@ -150,6 +155,15 @@ public class OrderService : IOrderService
                             Id = d.Id.ToString(),
                             Date = d.Date,
                             Seats = d.Seats,
+                            Location = d.Location != null ? new EventLocationDto
+                            {
+                                Id = d.Location.Id,
+                                Street = d.Location.Street,
+                                HouseNumber = d.Location.HouseNumber,
+                                PostalCode = d.Location.PostalCode,
+                                City = d.Location.City,
+                                AdditionalInfo = d.Location.AdditionalInfo
+                            } : null
                         }).ToList(),
                         Tags = eventData.Tags?.Select(t => new TagDto
                         {

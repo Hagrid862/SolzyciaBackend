@@ -221,7 +221,16 @@ public class EventService : IEventService
                     {
                         Id = date.Id.ToString(),
                         Date = date.Date,
-                        Seats = date.Seats
+                        Seats = date.Seats,
+                        Location = date.Location != null ? new EventLocationDto
+                        {
+                            Id = date.Location.Id,
+                            Street = date.Location.Street,
+                            HouseNumber = date.Location.HouseNumber,
+                            PostalCode = date.Location.PostalCode,
+                            City = date.Location.City,
+                            AdditionalInfo = date.Location.AdditionalInfo
+                        } : null
                     };
                     datesDto.Add(dateDto);
                 }
@@ -271,8 +280,9 @@ public class EventService : IEventService
             var @event = await _context.Events
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
-                .Include(x => x.Dates)
+                .Include(x => x.Dates).ThenInclude(x => x.Location)
                 .Include(x => x.Images)
+                .Include(x => x.Reviews) // Include Reviews entity
                 .FirstOrDefaultAsync(x => x.Id == long.Parse(eventId));
 
             if (@event == null)
@@ -307,7 +317,16 @@ public class EventService : IEventService
                 {
                     Id = date.Id.ToString(),
                     Date = date.Date,
-                    Seats = date.Seats
+                    Seats = date.Seats,
+                    Location = date.Location != null ? new EventLocationDto
+                    {
+                        Id = date.Location.Id,
+                        Street = date.Location.Street,
+                        HouseNumber = date.Location.HouseNumber,
+                        PostalCode = date.Location.PostalCode,
+                        City = date.Location.City,
+                        AdditionalInfo = date.Location.AdditionalInfo
+                    } : null
                 };
                 datesDto.Add(dateDto);
             }
@@ -413,7 +432,16 @@ public class EventService : IEventService
                     {
                         Id = date.Id.ToString(),
                         Date = date.Date,
-                        Seats = date.Seats
+                        Seats = date.Seats,
+                        Location = date.Location != null ? new EventLocationDto
+                        {
+                            Id = date.Location.Id,
+                            Street = date.Location.Street,
+                            HouseNumber = date.Location.HouseNumber,
+                            PostalCode = date.Location.PostalCode,
+                            City = date.Location.City,
+                            AdditionalInfo = date.Location.AdditionalInfo
+                        } : null
                     };
                     datesDto.Add(dateDto);
                 }
